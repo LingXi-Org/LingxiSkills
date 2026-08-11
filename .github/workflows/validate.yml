@@ -1,0 +1,30 @@
+name: Validate Agent Skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install validator
+        run: python -m pip install --disable-pip-version-check -r requirements-dev.txt
+      - name: Validate all Skills
+        shell: bash
+        run: |
+          set -euo pipefail
+          found=0
+          while IFS= read -r -d '' skill_file; do
+            found=1
+            python -m skills_ref.cli validate "$(dirname "$skill_file")"
+          done < <(find skills -mindepth 2 -maxdepth 2 -type f -iname 'skill.md' -print0 | sort -z)
+          test "$found" -eq 1
