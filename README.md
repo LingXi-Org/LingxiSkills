@@ -34,6 +34,10 @@ timeouts, budgets, or other policy controls.
 - `hello`: concise greetings in the language and tone requested by the user.
   It demonstrates frontmatter, a reference document, an asset template, and a
   non-executed example script.
+- `visual-explainer`: creates a self-contained, offline interactive HTML page
+  for concepts that benefit from diagrams and controlled exploration.
+- `lecture-hook`: researches and drafts a concise, evidence-grounded opening
+  that bridges a lesson hook to its target concept.
 
 ## Validate locally
 
@@ -46,6 +50,8 @@ python -m venv .venv
 # Windows: .venv\\Scripts\\activate
 python -m pip install -r requirements-dev.txt
 python -m skills_ref.cli validate skills/hello
+python -m skills_ref.cli validate skills/visual-explainer
+python -m skills_ref.cli validate skills/lecture-hook
 ```
 
 `skills-ref==0.1.1` is a development/CI validation dependency only.
