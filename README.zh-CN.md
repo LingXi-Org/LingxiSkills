@@ -6,6 +6,17 @@
 frontmatter 的 `SKILL.md`，并可包含 `scripts/`、`references/` 与 `assets/`。
 本仓库不定义 LingxiGraph 私有 Skill 格式。
 
+## 元数据与产物约定
+
+每个 Skill 使用英文小写 kebab-case `name` 作为标准运行时标识，并在
+`metadata` 中统一提供 `display-name`、`display-description`、
+`output-language: zh-CN`、`output-contract`、`version` 和 `author`。Skill
+加载后，LingxiGraph 会原生保留这些元数据；对于只暴露 `name` 和
+`description` 的发现目录，中文展示字段也会同时写入 `description`。
+
+所有面向学习者的生成产物默认且必须使用简体中文。协议字段、标识符、
+公式、代码、URL 和文件名保留原有技术形式。
+
 ## 在 LingxiGraph 中使用
 
 ```python
@@ -26,16 +37,16 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 
 ## 当前 Skill
 
-- `hello`：按用户指定的语言和语气生成简短问候，展示 frontmatter、reference、asset
+- `chinese-greeting`：按用户指定的语气生成简短中文问候，展示 frontmatter、reference、asset
   模板和不会自动执行的示例脚本。
-- `visual-explainer`：为适合通过图形和控件理解的知识点生成可离线打开的单文件交互式
+- `interactive-visual-explainer`：为适合通过图形和控件理解的知识点生成可离线打开的单文件交互式
   HTML 讲解页。
-- `lecture-hook`：检索并生成有证据依据、能自然过渡到目标知识点的简短课程开场。
-- `lecture-deck`：生成固定尺寸、自包含的 HTML 讲解课件，包含结构化 zoom 数据、protected-view
+- `lesson-intro`：检索并生成有证据依据、能自然过渡到目标知识点的简短课程引入。
+- `interactive-lecture-deck`：生成固定尺寸、自包含的 HTML 讲解课件，包含结构化 zoom 数据、protected-view
   空间运行时、离线 `dist/lecture.html` 发布物与严格的视觉/结构校验。
 - `adaptive-pedagogy`：根据学习证据选择一个低摩擦、可解释的教学策略，避免不必要的阻塞式
   追问。
-- `learning-state-reflector`：将学习事件压缩为谨慎、非阻塞的状态更新和验证债务建议，不作
+- `learner-state-reflector`：将学习事件压缩为谨慎、非阻塞的状态更新和验证债务建议，不作
   教育诊断。
 
 ## 本地校验
@@ -45,12 +56,12 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 ```bash
 python -m venv .venv
 python -m pip install -r requirements-dev.txt
-python -m skills_ref.cli validate skills/hello
-python -m skills_ref.cli validate skills/visual-explainer
-python -m skills_ref.cli validate skills/lecture-hook
-python -m skills_ref.cli validate skills/lecture-deck
+python -m skills_ref.cli validate skills/chinese-greeting
+python -m skills_ref.cli validate skills/interactive-visual-explainer
+python -m skills_ref.cli validate skills/lesson-intro
+python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
-python -m skills_ref.cli validate skills/learning-state-reflector
+python -m skills_ref.cli validate skills/learner-state-reflector
 ```
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。

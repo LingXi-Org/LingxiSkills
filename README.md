@@ -7,6 +7,19 @@ contain `SKILL.md` with YAML frontmatter and may include `scripts/`,
 `references/`, and `assets/`. The repository does not define a LingxiGraph-only
 Skill format.
 
+## Metadata and output convention
+
+Every bundled Skill uses an English lowercase kebab-case `name` for standard
+runtime identity. Its `metadata` map also contains `display-name`,
+`display-description`, `output-language: zh-CN`, `output-contract`, `version`,
+and `author`. LingxiGraph natively preserves this metadata when a Skill is
+loaded, while the Chinese display fields are also included in `description`
+for discovery-time catalogs that expose only `name` and `description`.
+
+All generated learner-facing artifacts are Simplified Chinese by contract.
+Protocol keys, identifiers, formulas, code, URLs, and file names remain in
+their original technical form.
+
 ## Use with LingxiGraph
 
 Clone this repository and point LingxiGraph at the `skills/` directory:
@@ -31,19 +44,19 @@ timeouts, budgets, or other policy controls.
 
 ## Included Skills
 
-- `hello`: concise greetings in the language and tone requested by the user.
+- `chinese-greeting`: concise Chinese greetings matched to the requested tone.
   It demonstrates frontmatter, a reference document, an asset template, and a
   non-executed example script.
-- `visual-explainer`: creates a self-contained, offline interactive HTML page
+- `interactive-visual-explainer`: creates a self-contained, offline interactive HTML page
   for concepts that benefit from diagrams and controlled exploration.
-- `lecture-hook`: researches and drafts a concise, evidence-grounded opening
+- `lesson-intro`: researches and drafts a concise, evidence-grounded lesson introduction
   that bridges a lesson hook to its target concept.
-- `lecture-deck`: builds fixed-size, self-contained HTML lecture decks with
+- `interactive-lecture-deck`: builds fixed-size, self-contained HTML lecture decks with
   structured zoom data, protected-view spatial runtime behavior, an offline
   `dist/lecture.html` build, and strict visual/structure validation.
 - `adaptive-pedagogy`: chooses one evidence-based, low-friction teaching strategy and
   returns a student-facing response without unnecessary blocking dialogue.
-- `learning-state-reflector`: compresses learning events into cautious, non-blocking
+- `learner-state-reflector`: compresses learning events into cautious, non-blocking
   state-update and verification-debt proposals without making educational diagnoses.
 
 ## Validate locally
@@ -56,12 +69,12 @@ python -m venv .venv
 # Linux/macOS: source .venv/bin/activate
 # Windows: .venv\\Scripts\\activate
 python -m pip install -r requirements-dev.txt
-python -m skills_ref.cli validate skills/hello
-python -m skills_ref.cli validate skills/visual-explainer
-python -m skills_ref.cli validate skills/lecture-hook
-python -m skills_ref.cli validate skills/lecture-deck
+python -m skills_ref.cli validate skills/chinese-greeting
+python -m skills_ref.cli validate skills/interactive-visual-explainer
+python -m skills_ref.cli validate skills/lesson-intro
+python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
-python -m skills_ref.cli validate skills/learning-state-reflector
+python -m skills_ref.cli validate skills/learner-state-reflector
 ```
 
 `skills-ref==0.1.1` is a development/CI validation dependency only.

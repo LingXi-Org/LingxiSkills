@@ -5,11 +5,11 @@
       "blocking": true
     },
     {
-      "skill": "learning-state-reflector",
+      "skill": "learner-state-reflector",
       "blocking": false
     },
     {
-      "skill": "visual-explainer",
+      "skill": "interactive-visual-explainer",
       "blocking": false
     }
   ]

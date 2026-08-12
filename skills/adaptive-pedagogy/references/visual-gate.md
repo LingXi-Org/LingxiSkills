@@ -1,6 +1,6 @@
 # Visual gate
 
-`visual-explainer` is optional.
+`interactive-visual-explainer` is optional.
 
 ## Use it when interaction is the cognition
 
@@ -21,7 +21,7 @@ Strong cases:
 
 ```json
 {
-  "skill": "visual-explainer",
+  "skill": "interactive-visual-explainer",
   "blocking": false,
   "brief": {
     "topic": "...",
