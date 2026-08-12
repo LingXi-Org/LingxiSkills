@@ -33,6 +33,10 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 - `lecture-hook`：检索并生成有证据依据、能自然过渡到目标知识点的简短课程开场。
 - `lecture-deck`：生成固定尺寸、自包含的 HTML 讲解课件，包含结构化 zoom 数据、protected-view
   空间运行时、离线 `dist/lecture.html` 发布物与严格的视觉/结构校验。
+- `adaptive-pedagogy`：根据学习证据选择一个低摩擦、可解释的教学策略，避免不必要的阻塞式
+  追问。
+- `learning-state-reflector`：将学习事件压缩为谨慎、非阻塞的状态更新和验证债务建议，不作
+  教育诊断。
 
 ## 本地校验
 
@@ -45,6 +49,8 @@ python -m skills_ref.cli validate skills/hello
 python -m skills_ref.cli validate skills/visual-explainer
 python -m skills_ref.cli validate skills/lecture-hook
 python -m skills_ref.cli validate skills/lecture-deck
+python -m skills_ref.cli validate skills/adaptive-pedagogy
+python -m skills_ref.cli validate skills/learning-state-reflector
 ```
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。

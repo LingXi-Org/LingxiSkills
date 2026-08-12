@@ -41,6 +41,10 @@ timeouts, budgets, or other policy controls.
 - `lecture-deck`: builds fixed-size, self-contained HTML lecture decks with
   structured zoom data, protected-view spatial runtime behavior, an offline
   `dist/lecture.html` build, and strict visual/structure validation.
+- `adaptive-pedagogy`: chooses one evidence-based, low-friction teaching strategy and
+  returns a student-facing response without unnecessary blocking dialogue.
+- `learning-state-reflector`: compresses learning events into cautious, non-blocking
+  state-update and verification-debt proposals without making educational diagnoses.
 
 ## Validate locally
 
@@ -56,6 +60,8 @@ python -m skills_ref.cli validate skills/hello
 python -m skills_ref.cli validate skills/visual-explainer
 python -m skills_ref.cli validate skills/lecture-hook
 python -m skills_ref.cli validate skills/lecture-deck
+python -m skills_ref.cli validate skills/adaptive-pedagogy
+python -m skills_ref.cli validate skills/learning-state-reflector
 ```
 
 `skills-ref==0.1.1` is a development/CI validation dependency only.

@@ -1,0 +1,28 @@
+{
+  "mode": "teach",
+  "topic": "gradient descent",
+  "learning_objective": "Explain why learning rate cannot be arbitrarily large.",
+  "taught_content": [
+    "gradient direction",
+    "learning rate",
+    "iteration"
+  ],
+  "current_event": {
+    "id": "e17",
+    "text": "学习率越大一步走得越远，所以应该越快。",
+    "correct": false,
+    "stable_incorrect_rule": true,
+    "confidence": 0.9,
+    "attempts": 1
+  },
+  "learner_state": {
+    "verification_debt": [],
+    "interaction": {
+      "mandatory_prompts_since_value": 0
+    }
+  },
+  "available_skills": [
+    "visual-explainer",
+    "lecture-deck"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "jobs": [
+    {
+      "skill": "adaptive-pedagogy",
+      "blocking": true
+    },
+    {
+      "skill": "learning-state-reflector",
+      "blocking": false
+    },
+    {
+      "skill": "visual-explainer",
+      "blocking": false
+    }
+  ]
+}
