@@ -44,9 +44,6 @@ timeouts, budgets, or other policy controls.
 
 ## Included Skills
 
-- `chinese-greeting`: concise Chinese greetings matched to the requested tone.
-  It demonstrates frontmatter, a reference document, an asset template, and a
-  non-executed example script.
 - `interactive-visual-explainer`: creates a self-contained, offline interactive HTML page
   for concepts that benefit from diagrams and controlled exploration.
 - `lesson-intro`: researches and creates a polished, human-sounding Chinese single-file HTML lesson
@@ -72,7 +69,6 @@ python -m venv .venv
 # Linux/macOS: source .venv/bin/activate
 # Windows: .venv\\Scripts\\activate
 python -m pip install -r requirements-dev.txt
-python -m skills_ref.cli validate skills/chinese-greeting
 python -m skills_ref.cli validate skills/interactive-visual-explainer
 python -m skills_ref.cli validate skills/lesson-intro
 python -m skills_ref.cli validate skills/interactive-lecture-deck

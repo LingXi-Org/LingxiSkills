@@ -37,8 +37,6 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 
 ## 当前 Skill
 
-- `chinese-greeting`：按用户指定的语气生成简短中文问候，展示 frontmatter、reference、asset
-  模板和不会自动执行的示例脚本。
 - `interactive-visual-explainer`：为适合通过图形和控件理解的知识点生成可离线打开的单文件交互式
   HTML 讲解页。
 - `lesson-intro`：检索并生成有证据、妙趣横生且像人写的中文单文件 HTML 课程引入；研究信息可选地保留在页面之外，不污染学习者看到的内容。
@@ -58,7 +56,6 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 ```bash
 python -m venv .venv
 python -m pip install -r requirements-dev.txt
-python -m skills_ref.cli validate skills/chinese-greeting
 python -m skills_ref.cli validate skills/interactive-visual-explainer
 python -m skills_ref.cli validate skills/lesson-intro
 python -m skills_ref.cli validate skills/interactive-lecture-deck
