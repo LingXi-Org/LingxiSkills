@@ -41,13 +41,15 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
   模板和不会自动执行的示例脚本。
 - `interactive-visual-explainer`：为适合通过图形和控件理解的知识点生成可离线打开的单文件交互式
   HTML 讲解页。
-- `lesson-intro`：检索并生成有证据依据、能自然过渡到目标知识点的简短课程引入。
+- `lesson-intro`：检索并生成有证据、妙趣横生且像人写的中文单文件 HTML 课程引入；研究信息可选地保留在页面之外，不污染学习者看到的内容。
 - `interactive-lecture-deck`：生成固定尺寸、自包含的 HTML 讲解课件，包含结构化 zoom 数据、protected-view
   空间运行时、离线 `dist/lecture.html` 发布物与严格的视觉/结构校验。
 - `adaptive-pedagogy`：根据学习证据选择一个低摩擦、可解释的教学策略，避免不必要的阻塞式
   追问。
 - `learner-state-reflector`：将学习事件压缩为谨慎、非阻塞的状态更新和验证债务建议，不作
   教育诊断。
+- `quiz-generator`：基于已讲授的课程材料生成紧凑、无泄题、可诊断理解误区的中文知识点测评，
+  并提供确定性的契约校验与公开快照清理。
 
 ## 本地校验
 
@@ -62,6 +64,7 @@ python -m skills_ref.cli validate skills/lesson-intro
 python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
+python -m skills_ref.cli validate skills/quiz-generator
 ```
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。

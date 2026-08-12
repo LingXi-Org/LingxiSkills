@@ -49,7 +49,8 @@ timeouts, budgets, or other policy controls.
   non-executed example script.
 - `interactive-visual-explainer`: creates a self-contained, offline interactive HTML page
   for concepts that benefit from diagrams and controlled exploration.
-- `lesson-intro`: researches and drafts a concise, evidence-grounded lesson introduction
+- `lesson-intro`: researches and creates a polished, human-sounding Chinese single-file HTML lesson
+  introduction; optional research bookkeeping stays outside the learner-facing page
   that bridges a lesson hook to its target concept.
 - `interactive-lecture-deck`: builds fixed-size, self-contained HTML lecture decks with
   structured zoom data, protected-view spatial runtime behavior, an offline
@@ -58,6 +59,8 @@ timeouts, budgets, or other policy controls.
   returns a student-facing response without unnecessary blocking dialogue.
 - `learner-state-reflector`: compresses learning events into cautious, non-blocking
   state-update and verification-debt proposals without making educational diagnoses.
+- `quiz-generator`: creates compact, evidence-grounded Chinese formative quizzes from taught
+  lesson material and provides deterministic contract validation plus a grading-safe snapshot.
 
 ## Validate locally
 
@@ -75,6 +78,7 @@ python -m skills_ref.cli validate skills/lesson-intro
 python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
+python -m skills_ref.cli validate skills/quiz-generator
 ```
 
 `skills-ref==0.1.1` is a development/CI validation dependency only.
