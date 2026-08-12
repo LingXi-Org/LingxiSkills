@@ -10,7 +10,7 @@ license: MIT
 compatibility: LingxiGraph Agent Skills runtime with web research
 metadata:
   author: LingXi-Org
-  version: 1.0.0
+  version: 1.1.0
   display-name: 课程引入设计
   display-description: 通过可核验的事实设计简短、有好奇心且能自然进入知识点的中文课程开场。
   output-language: zh-CN
@@ -43,13 +43,16 @@ unless a higher-priority runtime policy explicitly changes it.
 
 1. Write an internal objective: “After this opening, the learner should be asking ___, and the
    target concept should be the natural answer.”
-2. Perform web research for every factual hook. Never rely on memory or invent facts.
+2. Perform web research for every factual hook. Prefer the model provider's native web-search
+   capability when available; never rely on memory or invent facts.
 3. Do not issue one generic query. Explore at least four applicable angles: origin or historical
    need, people and conflict, failure/accident/limitation, counterintuitive fact or paradox,
    everyday phenomenon, modern application, misconception, and extreme case. Use
    `assets/query-patterns.md` when useful.
-4. Default research target: four distinct search angles, six inspected search results, three full
-   pages fetched, and two independent sources supporting the selected hook's core fact.
+4. Default research target: four distinct search angles, six inspected search results, three
+   source pages or equivalent native-search source records, and two independent sources supporting
+   the selected hook's core fact. If the provider returns source records directly, inspect titles,
+   URLs, snippets, dates, and provenance from the tool output instead of inventing page content.
 5. Apply `references/source-quality.md`. Prefer primary sources, official archives, universities,
    museums, professional societies, governments, standards bodies, peer-reviewed work, and only
    then reputable secondary sources. Use tertiary sources for discovery, not as the sole support
@@ -69,13 +72,25 @@ unless a higher-priority runtime policy explicitly changes it.
 11. Apply the seductive-detail test: every detail must increase the need to understand the target
    concept.
 
+## Search quality and provider policy
+
+Use the native provider web-search tool as the primary research path. For DeepSeek Responses API,
+the expected capability is `tools: [{"type": "web_search"}]` with `tool_choice: "auto"`; do not
+add a second custom search implementation to the same specialist unless the runtime explicitly
+reports that native search is unavailable. Native search results are evidence inputs, not facts:
+inspect source quality, cross-check the central claim, and preserve URLs and uncertainty in
+`research`.
+
+When native search is unavailable, use the runtime's mapped `web_search`/`web_fetch` tools and obey
+their contracts. Do not assume that a search result snippet is equivalent to fetching the source.
+
 ## Runtime limits
 
 The active LingxiLearn runtime has a smaller budget than the research standard. When these limits
 apply, follow them exactly and do not pretend the default research target was completed:
 
-- at most 3 calls to `web_search`;
-- at most 4 calls to `web_fetch`;
+- at most 3 native `web_search` tool calls (or 3 mapped search calls);
+- at most 4 mapped `web_fetch` calls when the fallback tool exists;
 - skip a source after one failure or timeout;
 - never retry the same query;
 - generate the result immediately after the budget is exhausted.

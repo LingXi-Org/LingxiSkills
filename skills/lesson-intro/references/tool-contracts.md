@@ -11,7 +11,29 @@ or timed-out source is skipped without retry, duplicate queries are forbidden, a
 starts immediately when a limit is reached. The result must record the actual evidence gathered
 and unmet targets.
 
-## `web.search`
+## Native DeepSeek search (preferred)
+
+For a DeepSeek Responses API model, expose the provider-native tool:
+
+```python
+from openai import OpenAI
+
+client = OpenAI(api_key="YOUR_DEEPSEEK_API_KEY", base_url="https://api.deepseek.com")
+response = client.responses.create(
+    model="deepseek-v4-flash",
+    input="搜索国内关于傅里叶变换教学的优质中文资料，并总结核心内容。",
+    tools=[{"type": "web_search"}],
+    tool_choice="auto",
+)
+```
+
+Use the native search output as evidence input. Inspect the returned source title, URL, snippet or
+content, publication date, and provenance. Do not attach the legacy custom search/fetch tools to
+the same DeepSeek specialist unless native search is unavailable. The native tool may perform
+retrieval internally; in that case count inspected source records rather than pretending separate
+`web_fetch` calls occurred.
+
+## Fallback `web.search`
 
 Input conceptually:
 
