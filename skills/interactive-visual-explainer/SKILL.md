@@ -77,8 +77,8 @@ Follow this order:
    Fix every FAIL before continuing.
 7. Run `node scripts/check_page.js <page>.html`. Resolve every FAIL before delivery and explain
    any remaining WARN in the delivery note. This static check is the required artifact validation
-   gate. Render light and dark screenshots when performing visual validation and inspect them;
-   screenshots are temporary validation artifacts, not delivery files.
+   gate. Screenshots may be generated temporarily when a visual check is useful, but they are not
+   required and are not delivery files.
 8. Compare the result with `references/anti-patterns.md` before delivery.
 
 ## Non-negotiable design rules
@@ -94,8 +94,8 @@ Follow this order:
 9. Select a dedicated dark palette; never create dark mode by inversion.
 10. Use only 400/500 font weights, 0.5 px hairlines, no gradients or shadows, sentence case, and
     no emoji.
-11. Inspect rendered light and dark screenshots before delivery. Keep those screenshots as
-    temporary validation artifacts only; do not deliver them.
+11. Deliver only the final self-contained HTML and the short delivery note. Any optional
+    screenshots or other temporary validation artifacts must not be delivered.
 
 ## Required delivery note
 
@@ -108,7 +108,6 @@ Return a short Chinese note, not the full HTML, with:
 主交互：<pattern> + <control and changed variable>
 图形清单：图1 <description> / 图2 <description>
 校验：validate_palette <light PASS / dark PASS>；check_page <FAIL count / WARN count>
-截图核对：亮色 ✓ 暗色 ✓
 补的假设：<assumptions>
 已知取舍：<removed content and reason>
 ```
