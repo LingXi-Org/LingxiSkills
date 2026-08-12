@@ -38,6 +38,9 @@ timeouts, budgets, or other policy controls.
   for concepts that benefit from diagrams and controlled exploration.
 - `lecture-hook`: researches and drafts a concise, evidence-grounded opening
   that bridges a lesson hook to its target concept.
+- `lecture-deck`: builds fixed-size, self-contained HTML lecture decks with
+  structured zoom data, anchored explanations, a local runtime, and strict
+  visual/structure validation.
 
 ## Validate locally
 
@@ -52,6 +55,7 @@ python -m pip install -r requirements-dev.txt
 python -m skills_ref.cli validate skills/hello
 python -m skills_ref.cli validate skills/visual-explainer
 python -m skills_ref.cli validate skills/lecture-hook
+python -m skills_ref.cli validate skills/lecture-deck
 ```
 
 `skills-ref==0.1.1` is a development/CI validation dependency only.

@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zoom Lecture Runtime</title>
+<style>
+:root{
+  color-scheme:light;
+  --paper:#fbfaf7;--surface:#ffffff;--sunken:#f4f2ec;
+  --ink-1:#23231f;--ink-2:#5f5e5a;--ink-3:#8a8880;
+  --rule:rgba(35,35,31,.14);--rule-strong:rgba(35,35,31,.30);
+  --accent:#534ab7;--accent-soft:#eeedfe;
+  --font-serif:"Songti SC","Source Han Serif SC","Noto Serif SC","SimSun",Georgia,"Times New Roman",serif;
+  --font-sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans SC","Segoe UI",Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#171715;color:var(--ink-1);font-family:var(--font-sans)}
+body{user-select:none}
+.runtime{position:relative;width:100%;height:100%;background:#181816}
+.viewport{position:absolute;inset:42px 0 64px 0;overflow:hidden;perspective:1800px;perspective-origin:50% 48%}
+.fit-layer{
+  position:absolute;left:50%;top:50%;width:1280px;height:720px;
+  transform-origin:50% 50%;transform:translate(-50%,-50%) scale(var(--fit,1));
+  will-change:transform;
+}
+.tilt-layer{
+  position:absolute;inset:0;transform-style:preserve-3d;transform-origin:50% 50%;
+  transform:translate3d(var(--shift-x,0px),var(--shift-y,0px),0) rotateY(var(--yaw,0deg)) rotateX(var(--pitch,0deg));
+  transition:transform 920ms var(--ease);will-change:transform;
+}
+.camera{
+  position:absolute;inset:0;width:1280px;height:720px;transform-origin:0 0;
+  transform:translate3d(0,0,0) scale(1);will-change:transform;
+}
+.slide-frame{
+  position:absolute;inset:0;width:1280px;height:720px;border:0;background:var(--paper);
+  box-shadow:0 0 0 .5px rgba(255,255,255,.18),0 24px 70px rgba(0,0,0,.16);
+}
+.highlight-layer{position:absolute;inset:0;width:1280px;height:720px;pointer-events:none}
+.anchor-highlight{
+  position:absolute;border:2px solid var(--accent);border-radius:8px;
+  box-shadow:0 0 0 1px rgba(251,250,247,.72) inset;
+  opacity:0;transition:opacity 260ms ease;
+}
+.anchor-highlight.on{opacity:1}
+.anchor-highlight.spotlight{box-shadow:0 0 0 2200px rgba(18,18,16,.42),0 0 0 1px rgba(251,250,247,.72) inset}
+
+.panel{
+  position:absolute;z-index:20;width:400px;max-height:min(560px,calc(100vh - 148px));
+  background:rgba(251,250,247,.985);border:.5px solid rgba(35,35,31,.22);border-radius:12px;
+  box-shadow:0 22px 60px rgba(0,0,0,.15);overflow:hidden;
+  opacity:0;transform:translateY(10px) scale(.985);pointer-events:none;
+  transition:opacity 260ms ease,transform 520ms var(--ease),left 760ms var(--ease),right 760ms var(--ease),top 760ms var(--ease),bottom 760ms var(--ease);
+}
+.panel.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+.panel[data-place="right"]{right:28px;top:50%;transform:translateY(calc(-50% + 10px)) scale(.985)}
+.panel[data-place="right"].show{transform:translateY(-50%) scale(1)}
+.panel[data-place="left"]{left:28px;top:50%;transform:translateY(calc(-50% + 10px)) scale(.985)}
+.panel[data-place="left"].show{transform:translateY(-50%) scale(1)}
+.panel[data-place="bottom"]{left:50%;bottom:26px;transform:translate(-50%,10px) scale(.985)}
+.panel[data-place="bottom"].show{transform:translate(-50%,0) scale(1)}
+.panel[data-place="top"]{left:50%;top:22px;transform:translate(-50%,-10px) scale(.985)}
+.panel[data-place="top"].show{transform:translate(-50%,0) scale(1)}
+.panel-head{padding:20px 22px 15px;border-bottom:.5px solid var(--rule);background:rgba(255,255,255,.52)}
+.panel-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:9px;font:400 11px/1.3 var(--font-mono);letter-spacing:.07em;color:var(--ink-3)}
+.panel-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+.panel-title{margin:0;font:500 22px/1.36 var(--font-serif);color:var(--ink-1)}
+.panel-body{padding:18px 22px 21px;max-height:430px;overflow:auto;font:400 16px/1.82 var(--font-sans);color:var(--ink-1);user-select:text}
+.panel-body p{margin:0 0 12px}.panel-body p:last-child{margin-bottom:0}
+.panel-body ul,.panel-body ol{margin:7px 0 12px;padding-left:1.25em}.panel-body li{margin:4px 0}
+.panel-body blockquote{margin:10px 0;padding-left:12px;border-left:2px solid var(--accent);color:var(--ink-2)}
+.panel-body hr{border:0;border-top:.5px solid var(--rule);margin:14px 0}
+.panel-body code{font:400 .94em/1.6 var(--font-mono);padding:1px 5px;border-radius:4px;background:var(--sunken);color:#3c3489}
+.panel-body strong{font-weight:500;color:#332b78}.panel-body em{color:var(--ink-2)}
+.panel-body a{color:var(--accent);text-underline-offset:3px}
+.reveal-token{display:inline;opacity:0;filter:blur(2px);transform:translateY(5px);animation:tokenIn 300ms var(--ease) forwards}
+@keyframes tokenIn{to{opacity:1;filter:blur(0);transform:translateY(0)}}
+
+.topbar{position:absolute;z-index:30;left:22px;right:22px;top:16px;display:flex;align-items:center;justify-content:space-between;pointer-events:none;color:rgba(255,255,255,.78)}
+.brand{font:400 12px/1.2 var(--font-mono);letter-spacing:.08em}.deck-title{max-width:55vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:400 13px/1.2 var(--font-sans);color:rgba(255,255,255,.64)}
+.controls{position:absolute;z-index:40;left:0;right:0;bottom:0;height:64px;display:flex;align-items:center;justify-content:center;gap:14px;background:rgba(18,18,16,.96);border-top:.5px solid rgba(255,255,255,.12)}
+.ctrl-btn{width:38px;height:34px;border:.5px solid rgba(255,255,255,.18);border-radius:8px;background:transparent;color:rgba(255,255,255,.86);font:400 16px var(--font-sans);cursor:pointer}
+.ctrl-btn:hover{background:rgba(255,255,255,.06)}.ctrl-btn:disabled{opacity:.28;cursor:default}
+.progress{display:flex;align-items:center;gap:12px;min-width:320px;max-width:42vw}
+.progress-line{position:relative;height:2px;flex:1;background:rgba(255,255,255,.14);overflow:hidden}
+.progress-fill{position:absolute;inset:0 auto 0 0;width:0;background:#afa9ec;transition:width 520ms var(--ease)}
+.progress-text{font:400 12px/1 var(--font-mono);color:rgba(255,255,255,.55);min-width:72px;text-align:right}
+.status{position:absolute;left:18px;bottom:20px;font:400 11px/1 var(--font-mono);color:rgba(255,255,255,.40)}
+.help{position:absolute;right:18px;bottom:18px;font:400 11px/1.25 var(--font-sans);color:rgba(255,255,255,.34)}
+.error-card{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,80vw);padding:28px 32px;background:var(--paper);border-radius:12px;border:.5px solid var(--rule-strong);font-size:15px;line-height:1.7;color:var(--ink-2)}
+.error-card h1{margin:0 0 10px;font:500 24px/1.3 var(--font-serif);color:var(--ink-1)}
+@media (prefers-reduced-motion:reduce){.tilt-layer,.camera,.panel,.progress-fill,.anchor-highlight{transition:none!important}.reveal-token{opacity:1!important;filter:none!important;transform:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="runtime" id="app">
+  <div class="topbar"><div class="brand">ZOOM LECTURE</div><div class="deck-title" id="deckTitle">Academic runtime</div></div>
+  <div class="viewport" id="viewport">
+    <div class="fit-layer" id="fitLayer">
+      <div class="tilt-layer" id="tiltLayer">
+        <div class="camera" id="camera">
+          <iframe class="slide-frame" id="frame" title="lecture slide"></iframe>
+          <div class="highlight-layer" id="highlights"></div>
+        </div>
+      </div>
+    </div>
+    <aside class="panel" id="panel" data-place="right" aria-live="polite">
+      <div class="panel-head">
+        <div class="panel-eyebrow"><span class="panel-dot"></span><span id="panelMeta">课堂讲解</span></div>
+        <h2 class="panel-title" id="panelTitle"></h2>
+      </div>
+      <div class="panel-body" id="panelBody"></div>
+    </aside>
+  </div>
+  <div class="controls">
+    <div class="status" id="status">ready</div>
+    <button class="ctrl-btn" id="prev" aria-label="上一步">‹</button>
+    <div class="progress"><div class="progress-line"><div class="progress-fill" id="progressFill"></div></div><div class="progress-text" id="progressText">1 / 1</div></div>
+    <button class="ctrl-btn" id="next" aria-label="下一步">›</button>
+    <div class="help">← / → 或 Space</div>
+  </div>
+</div>
+<script>
+(()=>{
+'use strict';
+const W=1280,H=720,DEPTH={1:1.25,2:1.5,3:1.8,4:2.2,5:3.5,6:5};
+const EASING={zoomOut:'cubic-bezier(.16,1,.3,1)',smooth:'cubic-bezier(.4,0,.2,1)',linear:'linear'};
+const el=id=>document.getElementById(id);
+const viewport=el('viewport'),fitLayer=el('fitLayer'),tiltLayer=el('tiltLayer'),cameraEl=el('camera'),frame=el('frame'),highlights=el('highlights');
+const panel=el('panel'),panelTitle=el('panelTitle'),panelBody=el('panelBody'),panelMeta=el('panelMeta');
+const prev=el('prev'),next=el('next'),progressFill=el('progressFill'),progressText=el('progressText'),status=el('status'),deckTitle=el('deckTitle');
+let lecture=null,flat=[],cursor=0,currentSlideId=null,fit=1,revealRun=0;
+
+const FALLBACK={
+ schemaVersion:'zoom-lecture/v2',
+ deck:{id:'runtime-demo',title:'标准 runtime 演示',language:'zh-CN',style:'anthropic-academic',canvas:{width:1280,height:720,format:'ppt169'},slideDir:'slides',createdAt:new Date().toISOString()},
+ defaults:{camera:{padding:28},transition:{inMs:920,outMs:640,easing:'zoomOut'},highlight:{style:'outline'},panel:{placement:'auto',width:420}},
+ slides:[{id:'s01',index:1,role:'content',file:'runtime/demo-slide.html',title:'放大不是为了看大，而是为了把因果关系逐层说清',anchors:[
+   {id:'a-demand',label:'输入压力',rect:{x:80,y:224,w:320,h:272}},
+   {id:'a-queue',label:'队列累积',rect:{x:472,y:224,w:320,h:272}},
+   {id:'a-delay',label:'等待时延',rect:{x:864,y:224,w:320,h:272}}
+ ],steps:[
+   {id:'s01-01',order:1,kind:'overview',camera:{mode:'fit'},advance:'manual'},
+   {id:'s01-02',order:2,kind:'zoom',camera:{mode:'anchor',anchorId:'a-demand'},panel:{placement:'right',title:'先找输入端的变化',body:'先看左边。真正重要的不是“请求很多”，而是到达速率开始稳定逼近服务能力。只要系统还有空隙，短暂的高峰并不会立刻变成问题。'},advance:'manual'},
+   {id:'s01-03',order:3,kind:'zoom',camera:{mode:'anchor',anchorId:'a-queue'},panel:{placement:'left',title:'转折发生在队列这里',body:'现在看中间：当输入长期高于处理速度，队列就不再有机会被清空。它像一个不断加水、却来不及排出的容器，后面的时延放大其实从这里已经决定了。'},advance:'manual'},
+   {id:'s01-04',order:4,kind:'zoom',camera:{mode:'anchor',anchorId:'a-delay'},panel:{placement:'left',title:'时延只是最后被看见的结果',body:'右边的时延抬升是结果，不是起点。以后排查性能问题，先回到队列是否持续累积，再去问链路或处理器是不是“变慢”了，判断会更稳。'},advance:'manual'}
+ ]}]
+};
+
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function inlineMd(s){
+ let x=escapeHtml(s);
+ x=x.replace(/`([^`]+)`/g,'<code>$1</code>');
+ x=x.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+ x=x.replace(/\*([^*]+)\*/g,'<em>$1</em>');
+ x=x.replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+ return x;
+}
+function renderMarkdown(md){
+ const lines=String(md??'').replace(/\r/g,'').split('\n');let out=[],para=[],list=null;
+ const flushPara=()=>{if(para.length){out.push('<p>'+inlineMd(para.join(' '))+'</p>');para=[]}};
+ const flushList=()=>{if(list){out.push(`<${list.type}>`+list.items.map(v=>'<li>'+inlineMd(v)+'</li>').join('')+`</${list.type}>`);list=null}};
+ for(const line of lines){
+  if(!line.trim()){flushPara();flushList();continue}
+  if(/^---+$/.test(line.trim())){flushPara();flushList();out.push('<hr>');continue}
+  const ul=line.match(/^\s*[-*]\s+(.+)/),ol=line.match(/^\s*\d+[.)]\s+(.+)/),quote=line.match(/^>\s?(.+)/),head=line.match(/^#{1,3}\s+(.+)/);
+  if(ul||ol){flushPara();const type=ul?'ul':'ol',val=(ul||ol)[1];if(!list||list.type!==type){flushList();list={type,items:[]}}list.items.push(val);continue}
+  if(quote){flushPara();flushList();out.push('<blockquote>'+inlineMd(quote[1])+'</blockquote>');continue}
+  if(head){flushPara();flushList();out.push('<p><strong>'+inlineMd(head[1])+'</strong></p>');continue}
+  para.push(line.trim());
+ }
+ flushPara();flushList();return out.join('');
+}
+function animateText(root){
+ const run=++revealRun;if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.nodeValue.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+ const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+ let parts=[];
+ for(const n of nodes){
+  const text=n.nodeValue;let segs;
+  try{segs=[...new Intl.Segmenter('zh-CN',{granularity:'word'}).segment(text)].map(x=>x.segment)}catch(e){segs=text.split(/(?<=\s)|(?=\s)/)}
+  parts.push({n,segs});
+ }
+ const count=Math.max(1,parts.reduce((a,p)=>a+p.segs.filter(x=>x.trim()).length,0));const gap=Math.min(26,1100/count);let idx=0;
+ for(const part of parts){
+  const frag=document.createDocumentFragment();
+  for(const seg of part.segs){if(!seg.trim()){frag.appendChild(document.createTextNode(seg));continue}const span=document.createElement('span');span.className='reveal-token';span.textContent=seg;span.style.animationDelay=(idx*gap)+'ms';frag.appendChild(span);idx++}
+  if(run===revealRun)part.n.replaceWith(frag);
+ }
+}
+function anchorsById(slide){return Object.fromEntries((slide.anchors||[]).map(a=>[a.id,a]));}
+function resolveCamera(step,slide){
+ if(step.camera.mode==='fit')return{s:1,cx:.5,cy:.5};
+ const anchors=anchorsById(slide),r=anchors[step.camera.anchorId].rect;const dc=lecture.defaults?.camera||{};const pad=step.camera.padding??dc.padding??24;
+ let s=step.camera.scale??(step.camera.depth?DEPTH[step.camera.depth]:null)??(dc.depth?DEPTH[dc.depth]:null)??Math.min(W/(r.w+2*pad),H/(r.h+2*pad));
+ s=Math.max(1.05,Math.min(6,s));const f=step.camera.focus??{cx:(r.x+r.w/2)/W,cy:(r.y+r.h/2)/H};const m=1/(2*s);return{s,cx:Math.max(m,Math.min(1-m,f.cx)),cy:Math.max(m,Math.min(1-m,f.cy))};
+}
+function resolvePlacement(step,cam){
+ const p=step.panel?.placement??lecture.defaults?.panel?.placement??'auto';if(p!=='auto')return p;return cam.cx<=.5?'right':'left';
+}
+function updateFit(){
+ const r=viewport.getBoundingClientRect();fit=Math.min((r.width-36)/W,(r.height-34)/H);fit=Math.max(.25,fit);fitLayer.style.setProperty('--fit',fit);if(lecture)renderStep(false);
+}
+function setTilt(place,show,animate=true){
+ const width=parseFloat(panel.style.width)||400;const shift=(width/Math.max(fit,.25))/2+42;let sx=0,sy=0,yaw=0,pitch=0;
+ if(show){if(place==='right'){sx=-shift;yaw=2.4;pitch=-.6}else if(place==='left'){sx=shift;yaw=-2.4;pitch=-.6}else if(place==='bottom'){sy=-72;pitch=-1}else if(place==='top'){sy=72;pitch=1}}
+ if(!animate)tiltLayer.style.transition='none';else tiltLayer.style.transition='transform 920ms var(--ease)';
+ tiltLayer.style.setProperty('--shift-x',sx+'px');tiltLayer.style.setProperty('--shift-y',sy+'px');tiltLayer.style.setProperty('--yaw',yaw+'deg');tiltLayer.style.setProperty('--pitch',pitch+'deg');
+ if(!animate)requestAnimationFrame(()=>tiltLayer.style.transition='transform 920ms var(--ease)');
+}
+function renderHighlights(step,slide){
+ highlights.innerHTML='';if(step.kind!=='zoom')return;const style=step.highlight?.style??lecture.defaults?.highlight?.style??'outline';if(style==='none')return;
+ const ids=step.highlight?.anchorIds?.length?step.highlight.anchorIds:[step.camera.anchorId];const map=anchorsById(slide);
+ ids.forEach(id=>{const a=map[id];if(!a)return;const d=document.createElement('div');d.className='anchor-highlight'+(style==='spotlight'?' spotlight':'');Object.assign(d.style,{left:a.rect.x+'px',top:a.rect.y+'px',width:a.rect.w+'px',height:a.rect.h+'px'});highlights.appendChild(d);requestAnimationFrame(()=>d.classList.add('on'))});
+}
+function showPanel(step,cam){
+ if(!step.panel){panel.classList.remove('show');setTilt('right',false);return}
+ const place=resolvePlacement(step,cam);panel.dataset.place=place;const baseW=step.panel.width??lecture.defaults?.panel?.width??420;const screenW=Math.max(340,Math.min(480,baseW*fit));panel.style.width=screenW+'px';
+ panelMeta.textContent=`课堂讲解 · ${flat[cursor].stepIndex+1}/${flat[cursor].slide.steps.length}`;panelTitle.textContent=step.panel.title||step.title||'讲解';panelBody.innerHTML=renderMarkdown(step.panel.body);panelBody.scrollTop=0;
+ panel.classList.add('show');setTilt(place,step.kind==='zoom');requestAnimationFrame(()=>animateText(panelBody));
+}
+function hidePanel(){panel.classList.remove('show');setTilt('right',false)}
+function loadSlide(slide){
+ if(currentSlideId===slide.id)return Promise.resolve();currentSlideId=slide.id;status.textContent=`slide ${slide.index}`;
+ let url;if(lecture===FALLBACK)url=new URL('demo-slide.html',document.baseURI).href;else url=new URL('../'+slide.file.replace(/^\.\//,''),document.baseURI).href;
+ return new Promise(resolve=>{frame.onload=()=>resolve();frame.src=url});
+}
+async function renderStep(animate=true){
+ if(!flat.length)return;const item=flat[cursor],slide=item.slide,step=item.step;await loadSlide(slide);
+ const cam=resolveCamera(step,slide);const tr=step.transition||lecture.defaults?.transition||{};const ms=animate?(step.kind==='overview'?(tr.outMs??640):(tr.inMs??920)):0;const easing=EASING[tr.easing||'zoomOut']||EASING.zoomOut;
+ cameraEl.style.transition=`transform ${ms}ms ${easing}`;const tx=W/2-cam.cx*W*cam.s,ty=H/2-cam.cy*H*cam.s;cameraEl.style.transform=`translate3d(${tx}px,${ty}px,0) scale(${cam.s})`;
+ renderHighlights(step,slide);if(step.panel)showPanel(step,cam);else hidePanel();
+ const pct=flat.length<=1?100:(cursor/(flat.length-1))*100;progressFill.style.width=pct+'%';progressText.textContent=`${cursor+1} / ${flat.length}`;prev.disabled=cursor===0;next.disabled=cursor===flat.length-1;deckTitle.textContent=`${lecture.deck.title} · ${slide.title}`;status.textContent=step.kind==='zoom'?'zoom':'overview';
+}
+function flatten(){flat=[];lecture.slides.forEach(slide=>(slide.steps||[]).forEach((step,stepIndex)=>flat.push({slide,step,stepIndex})));}
+function go(delta){const n=Math.max(0,Math.min(flat.length-1,cursor+delta));if(n===cursor)return;cursor=n;renderStep(true)}
+async function boot(){
+ const q=new URLSearchParams(location.search);const src=q.get('lecture')||'../lecture.json';
+ try{const res=await fetch(src,{cache:'no-store'});if(!res.ok)throw new Error(res.status+' '+res.statusText);lecture=await res.json();status.textContent='loaded'}catch(err){lecture=FALLBACK;status.textContent='demo';console.info('lecture.json unavailable, using built-in demo:',err)}
+ flatten();updateFit();await renderStep(false);
+}
+prev.addEventListener('click',()=>go(-1));next.addEventListener('click',()=>go(1));
+addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(1)}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(-1)}else if(e.key==='Home'){cursor=0;renderStep()}else if(e.key==='End'){cursor=flat.length-1;renderStep()}});
+addEventListener('resize',updateFit);boot();
+})();
+</script>
+</body>
+</html>
