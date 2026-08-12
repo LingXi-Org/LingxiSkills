@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -235,6 +236,20 @@ def rects_overlap(a: dict, b: dict, gap: int = 0) -> bool:
     )
 
 
+def valid_rect(rect: object) -> bool:
+    """Return whether an anchor rectangle is safe for geometry checks."""
+
+    if not isinstance(rect, dict):
+        return False
+    return all(
+        key in rect
+        and not isinstance(rect[key], bool)
+        and isinstance(rect[key], (int, float))
+        and math.isfinite(float(rect[key]))
+        for key in ("x", "y", "w", "h")
+    )
+
+
 def cjk_len(text: str) -> int:
     """按「汉字算 1、连续 ASCII 词算 1」粗略估算篇幅。"""
     stripped = re.sub(r"[`*_>#\-\[\]()]", "", text)
@@ -379,6 +394,14 @@ def validate_anchors(slide: dict, parser: SlideParser, rep: Report, global_ids: 
             rep.err(where, f"锚点 id {aid!r} 与 {global_ids[aid]} 页重名（需全 deck 唯一）")
         global_ids.setdefault(aid, slide["id"])
 
+        if not valid_rect(rect):
+            rep.err(
+                where,
+                f"锚点 {aid} 的 rect 必须是包含 x/y/w/h 的对象，实际为 {rect!r}；"
+                "不要使用 [x, y, w, h] 数组",
+            )
+            continue
+
         if rect["x"] + rect["w"] > CANVAS_W or rect["y"] + rect["h"] > CANVAS_H:
             rep.err(where, f"锚点 {aid} 的 rect 超出画布：{rect}")
 
@@ -503,6 +526,9 @@ def validate_steps(slide: dict, rep: Report, defaults: dict, global_step_ids: se
             rep.err(tag, "depth 与 scale 只能二选一")
 
         rect = anchors[aid]["rect"]
+        if not valid_rect(rect):
+            rep.err(tag, f"camera.anchorId={aid!r} 引用的 rect 无法进行镜头计算")
+            continue
         s = resolve_scale(camera, rect, default_depth, default_padding)
         if s <= MIN_SCALE + 1e-6:
             rep.warn(tag, f"解出的放大倍率 {s:.2f} 接近 1，锚点过大，建议改用 overview 步")
