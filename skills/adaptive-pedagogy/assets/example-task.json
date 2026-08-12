@@ -1,11 +1,11 @@
 {
   "mode": "teach",
-  "topic": "gradient descent",
-  "learning_objective": "Explain why learning rate cannot be arbitrarily large.",
+  "topic": "梯度下降",
+  "learning_objective": "解释为什么学习率不能任意增大。",
   "taught_content": [
-    "gradient direction",
-    "learning rate",
-    "iteration"
+    "梯度方向",
+    "学习率",
+    "迭代"
   ],
   "current_event": {
     "id": "e17",
@@ -22,7 +22,7 @@
     }
   },
   "available_skills": [
-    "visual-explainer",
-    "lecture-deck"
+    "interactive-visual-explainer",
+    "interactive-lecture-deck"
   ]
 }

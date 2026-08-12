@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json, sys
 
-ALLOWED_EXTERNAL = {"visual-explainer", "lecture-deck", "learning-state-reflector"}
+ALLOWED_EXTERNAL = {"interactive-visual-explainer", "interactive-lecture-deck", "learner-state-reflector"}
 
 def fail(msg):
     print("FAIL:", msg)
@@ -22,8 +22,8 @@ def main(path):
         fail("preflight cannot require learner reply")
     vr = data.get("visual_request")
     if vr:
-        if vr.get("skill") != "visual-explainer":
-            fail("visual_request must target visual-explainer")
+        if vr.get("skill") != "interactive-visual-explainer":
+            fail("visual_request must target interactive-visual-explainer")
         if not vr.get("blocking", False) and not vr.get("fallback_text"):
             fail("non-blocking visual request needs fallback_text")
     bg = data.get("background_reflection")

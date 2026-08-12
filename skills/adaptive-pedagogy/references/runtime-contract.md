@@ -8,13 +8,13 @@ Normal path:
 Budget:
 - one blocking pedagogical Skill call;
 - at most one blocking external rendering Skill call, and only when necessary;
-- zero dependence on `learning-state-reflector`.
+- zero dependence on `learner-state-reflector`.
 
 ## Background path
 
 After rendering:
-- enqueue `learning-state-reflector`;
-- optionally build `visual-explainer`;
+- enqueue `learner-state-reflector`;
+- optionally build `interactive-visual-explainer`;
 - store hint/choice/UI events.
 
 The next synchronous call may use the most recent committed learner state, but it must also include
@@ -22,7 +22,7 @@ the current session's raw evidence so a delayed background update cannot block p
 
 ## Preflight
 
-While `lecture-deck` is being viewed, the host should *optionally* run:
+While `interactive-lecture-deck` is being viewed, the host should *optionally* run:
 
 ```json
 {

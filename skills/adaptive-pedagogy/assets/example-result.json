@@ -6,7 +6,7 @@
   ],
   "decision": {
     "strategy": "conceptual_conflict",
-    "reason": "Learner expressed a stable high-confidence rule that can be tested with one counterexample.",
+    "reason": "学习者表达了一个稳定且高置信度的规则，可以用一个反例进行检验。",
     "question_value_gate": "ask",
     "verification_debt": "none"
   },
@@ -33,17 +33,17 @@
     ]
   },
   "visual_request": {
-    "skill": "visual-explainer",
+    "skill": "interactive-visual-explainer",
     "blocking": false,
     "brief": {
-      "topic": "gradient descent learning rate",
+      "topic": "梯度下降的学习率",
       "predict_before_reveal": true,
-      "interaction": "slider for learning rate and animated iterate trace"
+      "interaction": "学习率滑块与迭代轨迹动画"
     },
     "fallback_text": "如果暂时不看图，也可以想一个极端情况：一步直接跨过最低点很多，会发生什么？"
   },
   "background_reflection": {
-    "skill": "learning-state-reflector",
+    "skill": "learner-state-reflector",
     "blocking": false,
     "event_ids": [
       "e17"
