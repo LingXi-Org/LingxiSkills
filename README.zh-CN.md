@@ -31,8 +31,8 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 - `visual-explainer`：为适合通过图形和控件理解的知识点生成可离线打开的单文件交互式
   HTML 讲解页。
 - `lecture-hook`：检索并生成有证据依据、能自然过渡到目标知识点的简短课程开场。
-- `lecture-deck`：生成固定尺寸、自包含的 HTML 讲解课件，包含结构化 zoom 数据、锚点讲解、
-  本地 runtime 与严格的视觉/结构校验。
+- `lecture-deck`：生成固定尺寸、自包含的 HTML 讲解课件，包含结构化 zoom 数据、protected-view
+  空间运行时、离线 `dist/lecture.html` 发布物与严格的视觉/结构校验。
 
 ## 本地校验
 

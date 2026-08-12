@@ -428,13 +428,6 @@ def validate_anchors(slide: dict, parser: SlideParser, rep: Report, global_ids: 
                 f"锚点 {aid} 尺寸 {rect['w']}×{rect['h']} 小于建议下限 "
                 f"{MIN_ANCHOR_W}×{MIN_ANCHOR_H}，放大后周围会大量留白",
             )
-        if (
-            rect["x"] < EDGE_CLEARANCE
-            or rect["y"] < EDGE_CLEARANCE
-            or CANVAS_W - (rect["x"] + rect["w"]) < EDGE_CLEARANCE
-            or CANVAS_H - (rect["y"] + rect["h"]) < EDGE_CLEARANCE
-        ):
-            rep.warn(where, f"锚点 {aid} 距画布边缘不足 {EDGE_CLEARANCE}px，焦点钳制后会偏出中心")
 
         rects.append((aid, rect))
 
@@ -514,22 +507,10 @@ def validate_steps(slide: dict, rep: Report, defaults: dict, global_step_ids: se
         if s <= MIN_SCALE + 1e-6:
             rep.warn(tag, f"解出的放大倍率 {s:.2f} 接近 1，锚点过大，建议改用 overview 步")
 
-        margin_x = 1 / (2 * s)
-        margin_y = 1 / (2 * s)
         if "focus" in camera:
             cx, cy = camera["focus"]["cx"], camera["focus"]["cy"]
-            if not (margin_x - 1e-6 <= cx <= 1 - margin_x + 1e-6):
-                rep.err(
-                    tag,
-                    f"focus.cx={cx:.4f} 超出 scale={s:.2f} 下的合法区间 "
-                    f"[{margin_x:.4f}, {1 - margin_x:.4f}]，请写钳制后的值",
-                )
-            if not (margin_y - 1e-6 <= cy <= 1 - margin_y + 1e-6):
-                rep.err(
-                    tag,
-                    f"focus.cy={cy:.4f} 超出 scale={s:.2f} 下的合法区间 "
-                    f"[{margin_y:.4f}, {1 - margin_y:.4f}]，请写钳制后的值",
-                )
+            if not (0 <= cx <= 1 and 0 <= cy <= 1):
+                rep.err(tag, f"focus 必须位于归一化画布 0..1，实际 cx={cx}, cy={cy}")
             acx, acy = rect_center_focus(rect)
             if abs(cx - acx) > 0.25 or abs(cy - acy) > 0.25:
                 rep.warn(tag, "focus 与锚点中心偏离超过 25% 画布，确认是有意为之")
@@ -667,14 +648,65 @@ def validate(project_dir: str, rep: Report) -> dict:
             runtime_html = open(runtime_path, encoding="utf-8").read()
             for marker, label in [
                 ("perspective:", "3D perspective"),
-                ("rotateY", "panel 侧向透视"),
+                ("spatial-layer", "Spatial UI 独立空间层"),
+                ("interaction-layer", "用户自由查看独立层"),
+                ("rotateY", "侧向纸面旋转"),
+                ("rotateX", "纵向纸面旋转"),
+                ("translate3d", "Z-depth 空间位移"),
+                ("addEventListener('wheel'", "滚轮自由缩放"),
+                ("addEventListener('pointerdown'", "左键拖拽自由查看"),
+                ("resetUserView", "自动镜头接管与自由视角复位"),
                 ("reveal-token", "小窗柔和文字显现"),
-                ("../lecture.json", "默认 lecture.json 加载"),
+                ("class=\"onboarding\"", "首次蓝色操作提示窗"),
+                ("geometry-probe-fit", "3D 几何测量探针"),
+                ("focusRectForStep", "camera/highlight 联合保护区域"),
+                ("fitCameraToSafeArea", "protected-view 镜头求解"),
+                ("finalProtectedGuard", "动画落定后的完整性二次保护"),
+                ("protectedRect", "panel 安全区计算"),
+                ("placementOrder", "panel 自动换边候选"),
+                ("--outside:#ffffff", "纸面外纯白背景"),
+                ("ZOOM_BUNDLE_START", "单文件 bundle 注入点"),
+                ("frame.srcdoc", "内嵌 slide 加载"),
+                ("../lecture.json", "开发态 lecture.json 加载"),
+                (".viewport{position:absolute;inset:0", "full-bleed viewport"),
             ]:
                 if marker not in runtime_html:
                     rep.warn("runtime", f"运行时缺少标准特征：{label}")
+            for forbidden, label in [
+                ("class=\"topbar\"", "顶部放映器栏"),
+                ("class=\"controls\"", "底部控制栏"),
+                ("view-indicator", "FREE VIEW zoom 状态标签"),
+                ("class=\"status\"", "debug 状态标签"),
+                ("先按自己的节奏看", "拟人化 onboarding 长文"),
+                ("切到下一讲时，镜头会自然接回", "解释性 onboarding 长文"),
+                ("明白，开始", "旧版对话式 onboarding 按钮"),
+            ]:
+                if forbidden in runtime_html:
+                    rep.err("runtime", f"v2.3 纯净运行时禁止出现：{label}")
         except OSError as exc:
             rep.err("runtime", f"读取 runtime/index.html 失败：{exc}")
+
+    standalone_path = os.path.join(project_dir, "dist", "lecture.html")
+    if not os.path.isfile(standalone_path):
+        rep.err("standalone", "缺少 dist/lecture.html；v2.3 标准交付必须生成单文件离线发布物")
+    else:
+        try:
+            standalone_html = open(standalone_path, encoding="utf-8").read()
+            for marker, label in [
+                ('data-zoom-standalone="true"', "standalone 构建标记"),
+                ('"format":"zoom-lecture-standalone/v1"', "内嵌 bundle"),
+                ('id="zoomLectureBundle"', "内嵌 lecture 数据"),
+                ('frame.srcdoc', "srcdoc slide 加载"),
+                ('fitCameraToSafeArea', "protected-view 镜头求解"),
+                ('finalProtectedGuard', "完整性二次保护"),
+                ('geometry-probe-fit', "3D 几何测量探针"),
+            ]:
+                if marker not in standalone_html:
+                    rep.err("standalone", f"单文件发布物缺少：{label}")
+            if '>null</script><!-- ZOOM_BUNDLE_END -->' in standalone_html:
+                rep.err("standalone", "bundle 仍为 null；似乎没有执行 build_standalone.py")
+        except OSError as exc:
+            rep.err("standalone", f"读取 dist/lecture.html 失败：{exc}")
 
     return {
         "slideCount": len(slides),

@@ -87,7 +87,11 @@ Schema：`references/lecture.schema.json`；`schemaVersion` 固定为 `zoom-lect
 
 `panel.body` 是屏幕上的讲解；`narration` 若存在，应是更口语的提词，不得直接复制 body。
 
-## 6. 示例
+## 6. panel 位置只是偏好
+
+`panel.placement` 的 `left/right/top/bottom/auto` 表示作者希望的讲解窗方向。runtime 必须优先满足“局部完整可见”：如果该方向经过 zoom + 3D 透视后会裁切 camera/highlight 联合区域或造成遮挡，允许自动换到其他方向，并同步调整 3D spatial 姿态。
+
+## 7. 示例
 
 ```json
 {

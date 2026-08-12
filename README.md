@@ -39,8 +39,8 @@ timeouts, budgets, or other policy controls.
 - `lecture-hook`: researches and drafts a concise, evidence-grounded opening
   that bridges a lesson hook to its target concept.
 - `lecture-deck`: builds fixed-size, self-contained HTML lecture decks with
-  structured zoom data, anchored explanations, a local runtime, and strict
-  visual/structure validation.
+  structured zoom data, protected-view spatial runtime behavior, an offline
+  `dist/lecture.html` build, and strict visual/structure validation.
 
 ## Validate locally
 

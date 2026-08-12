@@ -1,6 +1,6 @@
 ---
 name: lecture-deck
-description: Create fixed-size, self-contained HTML lecture slides with a visual-first academic style, structured lecture.json zoom data, anchored explanations, and a local presentation runtime. Use when generating lesson decks, problem walkthroughs, course slides, zoomable HTML presentations, lecture manifests, or interactive step-by-step teaching visuals. Keep slides concise, make causal structure visible, and use the bundled templates, schemas, references, and validator.
+description: Create fixed-size, self-contained HTML lecture slides with a visual-first academic style, structured lecture.json zoom data, anchored explanations, protected viewport layout, and a local presentation runtime. Use when generating lesson decks, problem walkthroughs, course slides, zoomable HTML presentations, lecture manifests, or interactive step-by-step teaching visuals. The workflow can compile a single offline dist/lecture.html that runs without Python, HTTP server, or CDN. Keep slides concise, make causal structure visible, and use the bundled templates, schemas, references, runtime, build script, and validator.
 ---
 
 # Lecture Deck
@@ -16,7 +16,8 @@ description: Create fixed-size, self-contained HTML lecture slides with a visual
 |---|---|---|
 | **幻灯片** | `slides/sNN.html`，每页一个自包含 HTML，固定 1280×720 | 放映画面；少文字，多图像/图表/结构图 |
 | **讲解数据** | `lecture.json` | 驱动 overview / zoom、锚点、高亮与教授式小窗 |
-| **运行时** | `runtime/index.html` | 标准放映器：丝滑缩放、3D 透视避让、学术小窗、自然文字显现 |
+| **运行时源码** | `runtime/index.html` | 标准放映器模板：丝滑缩放、空间化 3D 纸面转场、鼠标自由查看、学术小窗 |
+| **单文件发布物** | `dist/lecture.html` | 编译后的完整离线 lecture；双击即可运行，不依赖 Python / server / CDN |
 | **回执** | `manifest.json` | 产物清单与校验结论 |
 
 ---
@@ -32,7 +33,8 @@ description: Create fixed-size, self-contained HTML lecture slides with a visual
 5. 读 [`references/lecture-data.md`](references/lecture-data.md) 与
    [`references/zoom-contract.md`](references/zoom-contract.md)，再写 `lecture.json`。
 6. 把 [`assets/runtime/index.html`](assets/runtime/index.html) 复制到工程 `runtime/index.html`。
-7. 跑 `python3 scripts/validate_deck.py <project_dir> --strict`；**零 ERROR、零 WARNING 才算标准交付**。
+7. 跑 `python3 scripts/build_standalone.py <project_dir>`，生成 `dist/lecture.html`。
+8. 跑 `python3 scripts/validate_deck.py <project_dir> --strict`；**零 ERROR、零 WARNING 才算标准交付**。
 
 ---
 
@@ -50,7 +52,13 @@ description: Create fixed-size, self-contained HTML lecture slides with a visual
 10. **页面本身不动**：幻灯片 CSS 不写 transition / animation；所有运动只由 runtime 执行。
 11. **数据双向对齐**：`lecture.json` 的 anchor 与 HTML 的 `data-anchor` / `data-rect` 逐值一致。
 12. **教授式讲解，不是 AI 读稿**：panel 用自然口语、观察→原因→意义的节奏，由浅入深；不复述屏幕文字。
-13. **不发明字段**：schema 外字段只进入 `extensions`。
+13. **空间转场是运行时硬能力**：PPT 背景必须被视为 3D 空间中的纸面；zoom 时除精确缩放外，还要执行可感知的 rotateY/rotateX + Z-depth 空间路径。
+14. **自由查看与课程镜头分层**：滚轮缩放、左键拖拽只作用于 interaction-layer；切 step 时手动视角柔和归零，同时 camera 与 spatial-layer 接管，不得跳变。
+15. **发布物必须单文件**：最终学习者打开的是 `dist/lecture.html`；lecture 与所有 slide 由构建脚本内联，浏览阶段不得依赖 Python / HTTP server。
+16. **运行时必须纯净**：无顶部/底部黑条、无进度 HUD、无 zoom 百分比或 debug 状态；只显示讲解页面与必要 panel。
+17. **首次操作提示必须像操作提示**：opening 初始帧只用蓝色小窗列出翻步、滚轮缩放、左键拖拽、复位四项；禁止写课程欢迎语、解释性长句或“老师会接管镜头”之类拟人口吻。
+18. **局部完整可见是最高优先级**：每个 zoom 的 camera anchor 与 highlight 联合区域，在最终 zoom + 3D perspective 后必须完整落在 viewport 内，并与 panel 保持安全间距。若冲突，runtime 必须自动移动镜头、降低倍率或更换 panel 方向；允许露出幻灯片之外的纯白背景，禁止裁切目标或被 panel 遮挡。
+19. **不发明字段**：schema 外字段只进入 `extensions`。
 
 ---
 
@@ -108,6 +116,8 @@ description: Create fixed-size, self-contained HTML lecture slides with a visual
 │   └── ...
 ├── runtime/
 │   └── index.html
+├── dist/
+│   └── lecture.html
 ├── lecture.json
 └── manifest.json
 ```
@@ -127,7 +137,7 @@ description: Create fixed-size, self-contained HTML lecture slides with a visual
 
 opening 必须 overview；closing 以 overview 收束为主。
 
-### Step 5 — 安装标准 runtime
+### Step 5 — 安装标准 runtime 并编译单文件
 
 复制：
 
@@ -136,7 +146,22 @@ mkdir -p <project_dir>/runtime
 cp assets/runtime/index.html <project_dir>/runtime/index.html
 ```
 
-runtime 默认从 `../lecture.json` 加载。使用本地 HTTP server 打开可获得完整体验。
+runtime 源码在开发态可从 `../lecture.json` 加载；**发布时不要让学习者启动 server**。复制完成后必须执行：
+
+```bash
+python3 scripts/build_standalone.py <project_dir>
+```
+
+得到 `dist/lecture.html`。该文件内嵌 lecture 与全部 slide，可直接双击运行。标准 runtime 必须支持：
+
+- 鼠标滚轮自由缩放（尽量以指针位置为中心）；
+- 左键拖拽平移，并有克制的空间观察角；
+- 双击 / `0` 复位自由查看层；
+- 每次 step 切换时，从用户当前视角顺滑接管到预设 anchor；
+- zoom + panel 时背景页面执行 Spatial UI Transition：明显但克制的侧转、后退、落位；
+- full-bleed 纯净界面：无 topbar / bottom controls / zoom 状态 HUD；
+- opening 初始帧出现一次蓝色 onboarding 小窗，只列翻步、缩放、拖拽、复位四项操作；
+- 每个 zoom 在最终 3D 姿态下自动求解 protected viewport：目标完整可见、与 panel 不重叠，必要时降倍率/换边/露出白色画布外区域。
 
 ### Step 6 — 校验
 
@@ -152,7 +177,7 @@ python3 scripts/measure_anchors.py <project_dir> --round 8
 
 ### Step 7 — 回执
 
-回报：总页数、content 页数、step 总数、runtime 路径、校验结论、假设与降级项。
+回报：总页数、content 页数、step 总数、runtime 源码路径、`dist/lecture.html` 单文件发布路径、校验结论、假设与降级项。
 
 ---
 
@@ -165,9 +190,10 @@ python3 scripts/measure_anchors.py <project_dir> --round 8
 | `references/visual-authoring.md` | 从“讲义”到“视觉解释”的强约束与反模式 |
 | `references/slide-authoring.md` | 单页 HTML、视觉对象、锚点、禁止项 |
 | `references/lecture-data.md` | lecture.json 与教授式 panel 写作 |
-| `references/zoom-contract.md` | 2D 相机 + 3D 透视避让运行时契约 |
+| `references/zoom-contract.md` | 2D 相机 + Spatial UI 3D 纸面转场 + 自由查看运行时契约 |
 | `assets/templates/opening.html` / `assets/templates/slide-base.html` / `assets/templates/closing.html` | 首页面、正文页、结尾页骨架 |
 | `assets/templates/layouts.md` | opening/content/closing 与视觉版式配方 |
-| `assets/runtime/index.html` | 标准运行时实现 |
+| `assets/runtime/index.html` | 标准 clean spatial 运行时源码模板 |
 | `assets/runtime/demo-slide.html` | 可独立预览的标准学术 HTML 页 |
+| `scripts/build_standalone.py` | 把 lecture + slides + runtime 编译成一个离线 HTML |
 | `scripts/validate_deck.py` | 严格结构/视觉/讲解数据检查 |
