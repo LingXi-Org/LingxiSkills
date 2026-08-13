@@ -48,9 +48,8 @@ timeouts, budgets, or other policy controls.
 
 - `interactive-visual-explainer`: creates a self-contained, offline interactive HTML page
   for concepts that benefit from diagrams and controlled exploration.
-- `lesson-intro`: researches and creates a polished, human-sounding Chinese single-file HTML lesson
-  introduction; optional research bookkeeping stays outside the learner-facing page
-  that bridges a lesson hook to its target concept.
+- `lesson-intro`: directly creates a polished, human-sounding Chinese single-file HTML lesson
+  introduction from supplied curriculum context, without web search or result aggregation.
 - `interactive-lecture-deck`: builds fixed-size, self-contained HTML lecture decks with
   structured zoom data, protected-view spatial runtime behavior, an offline
   `dist/lecture.html` build, and strict visual/structure validation.
@@ -58,6 +57,10 @@ timeouts, budgets, or other policy controls.
   returns a student-facing response without unnecessary blocking dialogue.
 - `learner-state-reflector`: compresses learning events into cautious, non-blocking
   state-update and verification-debt proposals without making educational diagnoses.
+- `formative-assessor`: converts deterministic grading and explicit learner signals into a
+  structured evidence state for `adaptive-pedagogy`, without writing to the learner.
+- `retrieval-practice-builder`: prefetches one evidence-grounded retrieval, transfer, boundary, or
+  misconception-discriminator task with a separate public task and grading key.
 - `quiz-generator`: creates compact, evidence-grounded Chinese formative quizzes from taught
   lesson material and provides deterministic contract validation plus a grading-safe snapshot.
 - `skill-eval-harness`: evaluates Skill contracts, execution trajectories, pedagogical safety, and
@@ -69,8 +72,9 @@ timeouts, budgets, or other policy controls.
 
 `lesson-intro` and `interactive-lecture-deck` are preparation peers and may run in parallel.
 `adaptive-pedagogy` is the only learner-facing writer in the personalized loop. State reflection,
-visual artifacts, quizzes, and remedial decks are non-blocking sidecars or prefetch work; they must
-not delay the already-rendered learner response. The runtime should enforce
+visual artifacts, retrieval tasks, quizzes, and remedial decks are non-blocking sidecars or prefetch
+work; they must not delay the already-rendered learner response. `formative-assessor` is a conditional
+structured hop only for ambiguous evidence. The runtime should enforce
 `learner_facing_writer_count <= 1` and use the metadata above instead of inferring parallelism from
 Skill prose.
 
@@ -89,12 +93,20 @@ python -m skills_ref.cli validate skills/lesson-intro
 python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
+python -m skills_ref.cli validate skills/formative-assessor
+python -m skills_ref.cli validate skills/retrieval-practice-builder
 python -m skills_ref.cli validate skills/quiz-generator
 python -m skills_ref.cli validate skills/skill-eval-harness
 python -m skills_ref.cli validate skills/curriculum-graph-builder
 ```
 
 `skills-ref==0.1.1` is a development/CI validation dependency only.
+
+The development evaluator can run every checked-in suite:
+
+```bash
+python skills/skill-eval-harness/scripts/run_suite.py .
+```
 
 ## Contributing
 

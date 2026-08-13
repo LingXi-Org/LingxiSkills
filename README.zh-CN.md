@@ -40,10 +40,12 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 ## 当前 Skill
 
 - `interactive-visual-explainer`：为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。
-- `lesson-intro`：基于事实、问题、场景或误区设计自然有趣的课程开场，引导学习者产生对目标概念的兴趣。
+- `lesson-intro`：基于已有课程上下文直接生成自然有趣的课程开场，不联网搜索或聚合检索结果。
 - `interactive-lecture-deck`：构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。
 - `adaptive-pedagogy`：根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
 - `learner-state-reflector`：将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
+- `formative-assessor`：把确定性判分和学习者明确信号转为供 `adaptive-pedagogy` 使用的结构化学习证据，不直接面向学习者发言。
+- `retrieval-practice-builder`：后台预取一个有证据依据的检索、迁移、边界或误区辨析任务，并分离公开题面与内部评分键。
 - `quiz-generator`：基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
 - `skill-eval-harness`：从组件契约、执行轨迹、教学质量和学习结果四层评测 Skill，生成确定性开发报告。
 - `curriculum-graph-builder`：根据学习上下文构建或增量扩展个性化课程知识图谱，保持稳定 ID、明确关系方向，并谨慎处理学习状态覆盖层。
@@ -51,9 +53,10 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 ## 执行计划不变量
 
 `lesson-intro` 与 `interactive-lecture-deck` 属于同一准备阶段，可以并行运行；个性化教学回合
-只允许 `adaptive-pedagogy` 作为 learner-facing writer。学习状态反思、可视化、测评和补救课件
-都属于非阻塞 sidecar 或预取任务，不能延迟已经渲染的学习者回应。运行时应直接使用 Skill
-元数据编译执行计划，并强制 `learner_facing_writer_count <= 1`。
+只允许 `adaptive-pedagogy` 作为 learner-facing writer。`formative-assessor` 只在证据模糊时
+作为结构化条件分支；学习状态反思、检索练习、可视化、测评和补救课件都属于非阻塞 sidecar
+或预取任务，不能延迟已经渲染的学习者回应。运行时应直接使用 Skill 元数据编译执行计划，
+并强制 `learner_facing_writer_count <= 1`。
 
 ## 本地校验
 
@@ -67,9 +70,17 @@ python -m skills_ref.cli validate skills/lesson-intro
 python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
+python -m skills_ref.cli validate skills/formative-assessor
+python -m skills_ref.cli validate skills/retrieval-practice-builder
 python -m skills_ref.cli validate skills/quiz-generator
 python -m skills_ref.cli validate skills/skill-eval-harness
 python -m skills_ref.cli validate skills/curriculum-graph-builder
 ```
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+
+开发期可运行所有已提交的评测套件：
+
+```bash
+python skills/skill-eval-harness/scripts/run_suite.py .
+```

@@ -44,6 +44,15 @@ def get_path(value: Any, dotted: str) -> Any:
     return current
 
 
+def has_path(value: Any, dotted: str) -> bool:
+    current = value
+    for part in dotted.split("."):
+        if not isinstance(current, dict) or part not in current:
+            return False
+        current = current[part]
+    return True
+
+
 def finding(check_id: str, status: str, message: str, severity: str = "error") -> dict[str, str]:
     return {
         "check_id": check_id,
@@ -133,7 +142,7 @@ def validate_known_output(output: Any, validator: str | None, findings: list[dic
             "student_response.text", "student_response.required_reply", "evidence_used", "state_update_proposals",
         ]
         for path in required:
-            if get_path(output, path) is None:
+            if not has_path(output, path):
                 add(findings, "component.schema_validity", "fail", f"缺少 {path}")
         if get_path(output, "version") == validator:
             add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
@@ -144,7 +153,7 @@ def validate_known_output(output: Any, validator: str | None, findings: list[dic
     elif validator == "learner-state-reflector-result.v1":
         required = ["version", "evidence_summary", "state_update_proposals", "verification_debt_proposals"]
         for path in required:
-            if get_path(output, path) is None:
+            if not has_path(output, path):
                 add(findings, "component.schema_validity", "fail", f"缺少 {path}")
         if get_path(output, "version") == validator:
             add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
@@ -153,7 +162,7 @@ def validate_known_output(output: Any, validator: str | None, findings: list[dic
     elif validator == "quiz-generation-result.v1":
         required = ["schema_version", "task_id", "title", "instructions", "questions", "total_points"]
         for path in required:
-            if get_path(output, path) is None:
+            if not has_path(output, path):
                 add(findings, "component.schema_validity", "fail", f"缺少 {path}")
         if get_path(output, "schema_version") == validator:
             add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
@@ -162,7 +171,7 @@ def validate_known_output(output: Any, validator: str | None, findings: list[dic
     elif validator == "curriculum-graph-builder-result.v1":
         required = ["schema_version", "task_id", "decision", "graph_patch", "warnings", "evidence_summary"]
         for path in required:
-            if get_path(output, path) is None:
+            if not has_path(output, path):
                 add(findings, "component.schema_validity", "fail", f"缺少 {path}")
         if get_path(output, "schema_version") == validator:
             add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
@@ -182,6 +191,98 @@ def validate_known_output(output: Any, validator: str | None, findings: list[dic
                 add(findings, "component.no_destructive_patch", "pass", "patch 不包含删除操作")
         else:
             add(findings, "component.graph_patch_shape", "fail", "graph_patch 必须是对象")
+    elif validator == "formative-assessor-result.v1":
+        required = [
+            "schema_version", "task_id", "concept", "evidence_state", "independent", "confidence",
+            "confidence_basis", "next_probe_needed", "recommended_policy_signal", "evidence_refs", "rationale", "limitations",
+        ]
+        for path in required:
+            if not has_path(output, path):
+                add(findings, "component.schema_validity", "fail", f"缺少 {path}")
+        if get_path(output, "schema_version") == validator:
+            add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
+        else:
+            add(findings, "component.schema_version", "fail", f"schema_version 必须为 {validator}")
+        if isinstance(output, dict) and {"student_response", "tutoring_message", "question_to_learner"} & output.keys():
+            add(findings, "component.assessor_not_learner_facing", "fail", "assessor 结果包含 learner-facing 字段")
+        else:
+            add(findings, "component.assessor_not_learner_facing", "pass", "assessor 结果不包含 learner-facing 字段")
+        evidence_state = get_path(output, "evidence_state")
+        if evidence_state in {"not_observed", "emerging", "demonstrated", "misconception_evidence", "needs_recheck"}:
+            add(findings, "component.evidence_state", "pass", f"evidence_state={evidence_state}")
+        elif has_path(output, "evidence_state"):
+            add(findings, "component.evidence_state", "fail", "assessor evidence_state 无效")
+        confidence_basis = get_path(output, "confidence_basis")
+        confidence = get_path(output, "confidence")
+        if confidence_basis in {"learner_reported", "ui_captured", "not_provided"}:
+            if confidence_basis == "not_provided" and confidence is not None:
+                add(findings, "component.confidence_boundary", "fail", "未提供 confidence 来源时不得填入 confidence")
+            else:
+                add(findings, "component.confidence_boundary", "pass", "confidence 带有明确来源")
+        elif has_path(output, "confidence_basis"):
+            add(findings, "component.confidence_boundary", "fail", "confidence_basis 无效")
+        refs = get_path(output, "evidence_refs")
+        if isinstance(refs, list) and refs:
+            add(findings, "component.evidence_refs", "pass", "assessor 保留了 evidence_refs")
+        else:
+            add(findings, "component.evidence_refs", "fail", "assessor 必须保留 evidence_refs")
+        if get_path(output, "next_probe_needed") is True and isinstance(get_path(output, "probe_reason"), str):
+            add(findings, "component.probe_reason", "pass", "需要 probe 时提供了 probe_reason")
+        elif get_path(output, "next_probe_needed") is True:
+            add(findings, "component.probe_reason", "fail", "next_probe_needed=true 但缺少 probe_reason")
+    elif validator == "retrieval-practice-builder-result.v1":
+        required = [
+            "schema_version", "task_id", "status", "concept", "candidates", "selection", "public_task",
+            "grading_key", "validation", "prefetch", "evidence_refs", "warnings",
+        ]
+        for path in required:
+            if not has_path(output, path):
+                add(findings, "component.schema_validity", "fail", f"缺少 {path}")
+        if get_path(output, "schema_version") == validator:
+            add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
+        else:
+            add(findings, "component.schema_version", "fail", f"schema_version 必须为 {validator}")
+        candidates = get_path(output, "candidates")
+        if isinstance(candidates, list) and len(candidates) <= 3:
+            add(findings, "component.candidate_limit", "pass", f"候选任务数量为 {len(candidates)}")
+        else:
+            add(findings, "component.candidate_limit", "fail", "候选任务数量必须为 0..3")
+        prefetch = get_path(output, "prefetch")
+        if isinstance(prefetch, dict) and prefetch.get("blocking") is False:
+            add(findings, "component.prefetch_nonblocking", "pass", "prefetch.blocking=false")
+        else:
+            add(findings, "component.prefetch_nonblocking", "fail", "retrieval practice 必须是非阻塞预取")
+        status = get_path(output, "status")
+        if status in {"ready", "insufficient_evidence", "discarded"}:
+            add(findings, "component.status", "pass", f"status={status}")
+        elif has_path(output, "status"):
+            add(findings, "component.status", "fail", "retrieval status 无效")
+        public = get_path(output, "public_task")
+        if status == "ready":
+            if not isinstance(public, dict):
+                add(findings, "component.public_task_safe", "fail", "ready 结果必须提供 public_task")
+            elif {"answer", "grading_key", "explanation", "rubric", "keywords", "assumptions"} & public.keys():
+                add(findings, "component.public_task_safe", "fail", "public_task 泄露内部答案字段")
+            else:
+                add(findings, "component.public_task_safe", "pass", "public_task 与 grading_key 分离")
+            selection_id = get_path(output, "selection.candidate_id")
+            public_id = get_path(output, "public_task.candidate_id")
+            if isinstance(selection_id, str) and selection_id == public_id:
+                add(findings, "component.selection_alignment", "pass", "public_task 与 selection 对齐")
+            elif has_path(output, "selection") or isinstance(public, dict):
+                add(findings, "component.selection_alignment", "fail", "public_task.candidate_id 与 selection 不一致")
+            if not isinstance(get_path(output, "grading_key"), dict):
+                add(findings, "component.grading_key", "fail", "ready 结果必须提供内部 grading_key")
+        elif status in {"insufficient_evidence", "discarded"}:
+            if get_path(output, "selection") is None and public is None and get_path(output, "grading_key") is None:
+                add(findings, "component.empty_nonready_shape", "pass", "非 ready 结果不泄露任务或答案")
+            else:
+                add(findings, "component.empty_nonready_shape", "fail", "非 ready 结果必须将 selection/public_task/grading_key 置空")
+        refs = get_path(output, "evidence_refs")
+        if isinstance(refs, list) and refs:
+            add(findings, "component.evidence_refs", "pass", "retrieval 结果保留了 evidence_refs")
+        elif has_path(output, "evidence_refs"):
+            add(findings, "component.evidence_refs", "fail", "retrieval 必须保留 evidence_refs")
     elif validator == "html":
         html = output if isinstance(output, str) else get_path(output, "html")
         if not isinstance(html, str) or "<!doctype html>" not in html.lower() or "<html" not in html.lower():
@@ -229,10 +330,10 @@ def evaluate_component(run: dict[str, Any], case: dict[str, Any], findings: list
         add(findings, "component.output_present", "pass", "存在输出产物")
     expected = case.get("expectations", {})
     for path in expected.get("required_output_keys", []):
-        if get_path(output, path) is None:
+        if not has_path(output, path):
             add(findings, "component.required_output_keys", "fail", f"缺少 {path}")
     if expected.get("required_output_keys"):
-        if all(get_path(output, path) is not None for path in expected["required_output_keys"]):
+        if all(has_path(output, path) for path in expected["required_output_keys"]):
             add(findings, "component.required_output_keys", "pass", "自定义必需字段齐全")
     validator = case.get("validator")
     if validator:
@@ -247,6 +348,12 @@ def evaluate_component(run: dict[str, Any], case: dict[str, Any], findings: list
             add(findings, "component.execution_metadata", "fail", f"SKILL.md 缺少 metadata：{sorted(missing)}")
         else:
             add(findings, "component.execution_metadata", "pass", "执行元数据齐全")
+        required_metadata = set(expected.get("required_metadata", []))
+        missing_expected = required_metadata - metadata
+        if missing_expected:
+            add(findings, "component.required_metadata", "fail", f"缺少指定 metadata：{sorted(missing_expected)}")
+        elif required_metadata:
+            add(findings, "component.required_metadata", "pass", "指定 metadata 齐全")
     else:
         add(findings, "component.execution_metadata", "not_observed", "未提供 skill_path，未检查 SKILL.md 元数据", "warning")
 
@@ -321,11 +428,13 @@ def evaluate_pedagogy(case: dict[str, Any], findings: list[dict[str, str]]) -> N
         add(findings, "pedagogy.answer_leakage", "not_observed", "未提供泄题词表", "warning")
     evidence_ids = set(str(item) for item in expected.get("evidence_ids", []))
     used = get_path(output, "evidence_used")
+    if not isinstance(used, list):
+        used = get_path(output, "evidence_refs")
     if expected.get("require_evidence"):
         if not isinstance(used, list) or not used:
-            add(findings, "pedagogy.evidence_grounding", "fail", "要求证据但 evidence_used 为空")
+            add(findings, "pedagogy.evidence_grounding", "fail", "要求证据但 evidence_used/evidence_refs 为空")
         elif evidence_ids and not set(map(str, used)).issubset(evidence_ids):
-            add(findings, "pedagogy.evidence_grounding", "fail", "evidence_used 含未在 case 中声明的证据 ID")
+            add(findings, "pedagogy.evidence_grounding", "fail", "输出含未在 case 中声明的证据 ID")
         else:
             add(findings, "pedagogy.evidence_grounding", "pass", "输出引用了声明范围内的证据")
     else:
@@ -361,6 +470,17 @@ def evaluate_pedagogy(case: dict[str, Any], findings: list[dict[str, str]]) -> N
         add(findings, "pedagogy.visual_fallback", "pass", "visual 请求可在文本 fallback 下异步执行")
     else:
         add(findings, "pedagogy.visual_fallback", "not_observed", "未请求 visual artifact", "warning")
+    for path in expected.get("forbidden_output_keys", []):
+        if has_path(output, path):
+            add(findings, "pedagogy.forbidden_output_keys", "fail", f"输出包含禁止字段：{path}")
+    if expected.get("forbidden_output_keys") and not any(has_path(output, path) for path in expected["forbidden_output_keys"]):
+        add(findings, "pedagogy.forbidden_output_keys", "pass", "未发现禁止字段")
+    if expected.get("non_blocking"):
+        prefetch = get_path(output, "prefetch")
+        if isinstance(prefetch, dict) and prefetch.get("blocking") is False:
+            add(findings, "pedagogy.non_blocking", "pass", "sidecar 明确声明为非阻塞")
+        else:
+            add(findings, "pedagogy.non_blocking", "fail", "sidecar 缺少 blocking=false")
 
 
 def evaluate_outcome(case: dict[str, Any], findings: list[dict[str, str]]) -> None:
@@ -413,6 +533,14 @@ def evaluate(run: dict[str, Any]) -> dict[str, Any]:
             findings: list[dict[str, str]] = []
             evaluator(run, case, findings) if name == "component" else evaluator(case, findings)
             layers[name] = layer_summary(findings)
+        for required_layer in case.get("expectations", {}).get("required_layers", []):
+            if required_layer not in layers:
+                continue
+            if layers[required_layer]["status"] == "not_observed":
+                layers[required_layer]["findings"].append(
+                    finding("coverage.required_layer", "fail", f"要求观察 layer={required_layer}，但没有可评测证据")
+                )
+                layers[required_layer] = layer_summary(layers[required_layer]["findings"])
         observed_scores = [layer["score"] for layer in layers.values() if layer["score"] is not None]
         score = round(sum(observed_scores) / len(observed_scores), 4) if observed_scores else None
         hard_fail = any(layer["status"] == "fail" for layer in layers.values())
