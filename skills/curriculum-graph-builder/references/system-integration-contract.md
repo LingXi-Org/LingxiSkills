@@ -1,9 +1,16 @@
 # System integration contract
 
+## Execution classification
+
+This Skill is `phase=authoring`, `critical-path=false`, `learner-facing=false`,
+`state-write-mode=proposal-only`, `parallel-safe=true`, and `latency-class=offline`. Treat it as a
+bounded manager-as-tools capability invoked by a Supervisor or Course Pack pipeline. It may run in
+parallel with lesson preparation, but it must never delay the learner's current teaching response.
+
 ## Recommended runtime flow
 
 ```text
-conversation / lesson event
+course pack / trusted lesson event
         ↓
 load learner graph candidates + learner-state signals
         ↓
@@ -20,7 +27,8 @@ materialize KnowledgeGraphData
 KnowledgeGraphAnimation
 ```
 
-Do **not** send model output directly to the visualization component before persistence. The host
+Do **not** put this Skill on the learner critical path or send model output directly to the
+visualization component before persistence. The host
 must validate and apply the patch first, then return the canonical persisted snapshot.
 
 ## Input contract expected from LingxiLearn
@@ -45,12 +53,15 @@ Minimum request:
 }
 ```
 
-Production requests should normally also include:
+Production authoring requests should normally also include:
 
 - relevant existing graph snapshots for the authenticated learner;
 - current concept signals from the active learning session;
 - concept-state signals from the authoritative learner-state layer;
 - upstream lesson/assessment artifacts as source materials when they contain curriculum relations.
+
+Do not pass unrelated private profile fields. Learner-state overlays are optional structured
+signals; they do not turn this authoring Skill into a knowledge-tracing or tutoring agent.
 
 Do not send unrelated private profile fields.
 

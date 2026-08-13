@@ -63,6 +63,7 @@ responses, replace a deterministic grader, or write learner state.
 
 Use `validator` values for the bundled contracts (`adaptive-pedagogy-result.v2`,
 `learner-state-reflector-result.v1`, `quiz-generation-result.v1`, `html`) or provide
+`curriculum-graph-builder-result.v1` or
 `required_output_keys` for another Skill. The harness performs deterministic checks only; judgments
 such as whether a misconception interpretation is pedagogically sound still require human review or
 a separately specified judge.

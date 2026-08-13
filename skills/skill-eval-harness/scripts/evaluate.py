@@ -159,6 +159,29 @@ def validate_known_output(output: Any, validator: str | None, findings: list[dic
             add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
         else:
             add(findings, "component.schema_version", "fail", f"schema_version 必须为 {validator}")
+    elif validator == "curriculum-graph-builder-result.v1":
+        required = ["schema_version", "task_id", "decision", "graph_patch", "warnings", "evidence_summary"]
+        for path in required:
+            if get_path(output, path) is None:
+                add(findings, "component.schema_validity", "fail", f"缺少 {path}")
+        if get_path(output, "schema_version") == validator:
+            add(findings, "component.schema_version", "pass", f"版本匹配：{validator}")
+        else:
+            add(findings, "component.schema_version", "fail", f"schema_version 必须为 {validator}")
+        patch = get_path(output, "graph_patch")
+        if isinstance(patch, dict):
+            required_patch_keys = {"add_nodes", "update_nodes", "add_edges", "update_edges", "learner_overlay_updates"}
+            missing = required_patch_keys - patch.keys()
+            if missing:
+                add(findings, "component.graph_patch_shape", "fail", f"graph_patch 缺少：{sorted(missing)}")
+            else:
+                add(findings, "component.graph_patch_shape", "pass", "graph_patch 字段齐全")
+            if any(key in patch for key in ("delete_nodes", "delete_edges")):
+                add(findings, "component.no_destructive_patch", "fail", "v1 patch 不得包含删除操作")
+            else:
+                add(findings, "component.no_destructive_patch", "pass", "patch 不包含删除操作")
+        else:
+            add(findings, "component.graph_patch_shape", "fail", "graph_patch 必须是对象")
     elif validator == "html":
         html = output if isinstance(output, str) else get_path(output, "html")
         if not isinstance(html, str) or "<!doctype html>" not in html.lower() or "<html" not in html.lower():

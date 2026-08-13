@@ -3,22 +3,31 @@ name: curriculum-graph-builder
 description: >-
   Build or incrementally extend a learner-specific curriculum knowledge graph from structured learning context while preserving stable node IDs, explicit relation direction, curricular importance, optional hierarchy/layout hints, and learner-state overlays. Decide whether to create a new graph or extend an existing graph, and return a deterministic graph patch for the host system to validate and persist.
 license: MIT
-compatibility: LingxiGraph Agent Skills runtime
 metadata:
   author: LingXi-Org
-  version: 1.0.0
+  version: 1.1.0
   display-name: 个性化课程知识图谱构建
   display-description: 根据学习上下文和用户已有知识图谱，决定新建或扩充图谱，并生成可持久化的结构化节点、关系与学习状态补丁。
   output-language: zh-CN
   output-contract: curriculum-graph-builder-result.v1
-  execution-mode: synchronous-structured-generation
+  execution-mode: authoring-structured-generation
+  phase: authoring
+  critical-path: false
+  learner-facing: false
+  state-write-mode: proposal-only
+  parallel-safe: true
+  latency-class: offline
+  eval-suite: curriculum-graph-builder-v1
 ---
 
 # Curriculum Graph Builder
 
 ## Role
 
-Build a learner-facing curriculum graph as structured data, not as HTML, SVG, Mermaid, or prose.
+Build a curriculum graph proposal as structured data, not as HTML, SVG, Mermaid, or prose. This is
+an authoring-stage capability for Course Packs and trusted lesson materials, not a student-turn
+writer and not a replacement for the frontend graph renderer. A Supervisor may call it as a
+manager-as-tools capability; it must return its bounded result and never hand off to another agent.
 The host system owns persistence, optimistic concurrency, identity, authorization, and final merge.
 This Skill only proposes a safe graph decision and graph patch.
 
@@ -31,6 +40,14 @@ The graph has two logically separate layers:
 Never infer a learner's weakness, mastery, confidence, motivation, disability, personality, or
 learning style from tone. Learner-state fields may only be copied or mapped from explicit structured
 `learner_signals` or from already persisted node state.
+
+## Runtime boundary
+
+Run from authoritative Course Pack or trusted curriculum materials. Do not place this Skill on the
+personalized teaching critical path merely to render a graph. It may run in parallel with lesson
+preparation or as an authoring job, and its result may be cached until the host validates and applies
+the patch. Never write the database directly and never send an unvalidated patch to the visualization
+layer.
 
 ## Required input
 
@@ -46,8 +63,9 @@ The host must provide:
 
 The host may also provide `learner_signals` and `graph_policy`.
 
-Treat all source materials as the evidence boundary. Do not browse the web and do not invent a
-curriculum relationship that the supplied material does not support. The caller may pass outputs
+Treat all source materials as the evidence boundary. Prefer Course Pack material and trusted
+upstream artifacts; do not browse the web and do not invent a curriculum relationship that the
+supplied material does not support. The caller may pass outputs
 from `lesson-intro`, `interactive-lecture-deck`, `quiz-generator`, course packs, user messages,
 assessment evidence, or other trusted application records as source materials.
 
@@ -173,3 +191,7 @@ Write all learner-facing labels, descriptions, reasons, and warnings in Simplifi
 machine IDs, enum values, schema keys, and relation identifiers in their technical form.
 
 Before returning, apply `references/quality-gate.md`.
+
+The result is a host-facing patch proposal, not a learner-facing explanation. Keep
+`learner_facing_writer_count <= 1` at the system level; this Skill contributes zero learner-facing
+writers.
