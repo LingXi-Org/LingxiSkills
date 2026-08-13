@@ -43,6 +43,7 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 - `adaptive-pedagogy`：根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
 - `learner-state-reflector`：将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
 - `quiz-generator`：基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
+- `curriculum-graph-builder`：根据学习上下文构建或增量扩展个性化课程知识图谱，保持稳定 ID、明确关系方向，并谨慎处理学习状态覆盖层。
 
 ## 本地校验
 
@@ -57,6 +58,7 @@ python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
 python -m skills_ref.cli validate skills/quiz-generator
+python -m skills_ref.cli validate skills/curriculum-graph-builder
 ```
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。

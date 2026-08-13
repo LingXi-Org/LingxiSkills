@@ -58,6 +58,8 @@ timeouts, budgets, or other policy controls.
   state-update and verification-debt proposals without making educational diagnoses.
 - `quiz-generator`: creates compact, evidence-grounded Chinese formative quizzes from taught
   lesson material and provides deterministic contract validation plus a grading-safe snapshot.
+- `curriculum-graph-builder`: builds or incrementally extends learner-specific curriculum graphs
+  with stable IDs, explicit relations, and cautious learner-state overlays.
 
 ## Validate locally
 
@@ -75,6 +77,7 @@ python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
 python -m skills_ref.cli validate skills/quiz-generator
+python -m skills_ref.cli validate skills/curriculum-graph-builder
 ```
 
 `skills-ref==0.1.1` is a development/CI validation dependency only.
