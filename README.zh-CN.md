@@ -13,6 +13,8 @@ frontmatter 的 `SKILL.md`，并可包含 `scripts/`、`references/` 与 `assets
 `output-language: zh-CN`、`output-contract`、`version` 和 `author`。Skill
 加载后，LingxiGraph 会原生保留这些元数据；对于只暴露 `name` 和
 `description` 的发现目录，中文展示字段也会同时写入 `description`。
+生产 Skill 还应提供 `phase`、`critical-path`、`learner-facing`、
+`state-write-mode`、`parallel-safe`、`latency-class` 和 `eval-suite`，供运行时编译执行计划。
 
 所有面向学习者的生成产物默认且必须使用简体中文。协议字段、标识符、
 公式、代码、URL 和文件名保留原有技术形式。
@@ -43,7 +45,15 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 - `adaptive-pedagogy`：根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
 - `learner-state-reflector`：将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
 - `quiz-generator`：基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
+- `skill-eval-harness`：从组件契约、执行轨迹、教学质量和学习结果四层评测 Skill，生成确定性开发报告。
 - `curriculum-graph-builder`：根据学习上下文构建或增量扩展个性化课程知识图谱，保持稳定 ID、明确关系方向，并谨慎处理学习状态覆盖层。
+
+## 执行计划不变量
+
+`lesson-intro` 与 `interactive-lecture-deck` 属于同一准备阶段，可以并行运行；个性化教学回合
+只允许 `adaptive-pedagogy` 作为 learner-facing writer。学习状态反思、可视化、测评和补救课件
+都属于非阻塞 sidecar 或预取任务，不能延迟已经渲染的学习者回应。运行时应直接使用 Skill
+元数据编译执行计划，并强制 `learner_facing_writer_count <= 1`。
 
 ## 本地校验
 
@@ -58,6 +68,7 @@ python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
 python -m skills_ref.cli validate skills/quiz-generator
+python -m skills_ref.cli validate skills/skill-eval-harness
 python -m skills_ref.cli validate skills/curriculum-graph-builder
 ```
 

@@ -10,9 +10,11 @@ Skill format.
 ## Metadata and output convention
 
 Every bundled Skill uses an English lowercase kebab-case `name` for standard
-runtime identity. Its `metadata` map also contains `display-name`,
+runtime identity. Production teaching Skills also use a `metadata` map containing `display-name`,
 `display-description`, `output-language: zh-CN`, `output-contract`, `version`,
-and `author`. LingxiGraph natively preserves this metadata when a Skill is
+`author`, and execution-plan fields: `phase`, `critical-path`, `learner-facing`,
+`state-write-mode`, `parallel-safe`, `latency-class`, and `eval-suite`.
+LingxiGraph natively preserves this metadata when a Skill is
 loaded, while the Chinese display fields are also included in `description`
 for discovery-time catalogs that expose only `name` and `description`.
 
@@ -58,8 +60,19 @@ timeouts, budgets, or other policy controls.
   state-update and verification-debt proposals without making educational diagnoses.
 - `quiz-generator`: creates compact, evidence-grounded Chinese formative quizzes from taught
   lesson material and provides deterministic contract validation plus a grading-safe snapshot.
+- `skill-eval-harness`: evaluates Skill contracts, execution trajectories, pedagogical safety, and
+  learner outcomes with deterministic, development-time reports.
 - `curriculum-graph-builder`: builds or incrementally extends learner-specific curriculum graphs
   with stable IDs, explicit relations, and cautious learner-state overlays.
+
+## Execution-plan invariants
+
+`lesson-intro` and `interactive-lecture-deck` are preparation peers and may run in parallel.
+`adaptive-pedagogy` is the only learner-facing writer in the personalized loop. State reflection,
+visual artifacts, quizzes, and remedial decks are non-blocking sidecars or prefetch work; they must
+not delay the already-rendered learner response. The runtime should enforce
+`learner_facing_writer_count <= 1` and use the metadata above instead of inferring parallelism from
+Skill prose.
 
 ## Validate locally
 
@@ -77,6 +90,7 @@ python -m skills_ref.cli validate skills/interactive-lecture-deck
 python -m skills_ref.cli validate skills/adaptive-pedagogy
 python -m skills_ref.cli validate skills/learner-state-reflector
 python -m skills_ref.cli validate skills/quiz-generator
+python -m skills_ref.cli validate skills/skill-eval-harness
 python -m skills_ref.cli validate skills/curriculum-graph-builder
 ```
 

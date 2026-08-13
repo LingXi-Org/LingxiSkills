@@ -11,11 +11,15 @@
 6. Add the common `metadata` keys `author`, `version`, `display-name`,
    `display-description`, `output-language`, and `output-contract`. Keep the
    standard runtime `name` English and kebab-case; keep Chinese display values
-   explicit and user-facing.
+   explicit and user-facing. Production teaching Skills should also declare
+   `phase`, `critical-path`, `learner-facing`, `state-write-mode`,
+   `parallel-safe`, `latency-class`, and `eval-suite`.
 7. State the Chinese-output contract in the body and keep generated prose,
    labels, and artifact text in Simplified Chinese.
 8. Run `python -m skills_ref.cli validate skills/<name>` and validate every
    Skill before submitting a change.
+9. For behavior changes, add or update a `skill-eval-harness` run covering the
+   relevant component, trajectory, pedagogy, and learner-outcome layers.
 
 LingxiGraph's runtime also enforces resource size limits, regular-file checks,
 symlink/reparse-point boundaries, and existing ToolSpec permissions. A Skill's
