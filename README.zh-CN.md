@@ -8,7 +8,7 @@ frontmatter 的 `SKILL.md`，并可包含 `scripts/`、`references/` 与 `assets
 
 ## 元数据与产物约定
 
-每个 Skill 使用英文小写 kebab-case `name` 作为标准运行时标识，并在
+每个 Skill 使用英文小写、两个单词以下划线连接的 `name` 作为标准运行时标识，并在
 `metadata` 中统一提供 `display-name`、`display-description`、
 `output-language: zh-CN`、`output-contract`、`version` 和 `author`。Skill
 加载后，LingxiGraph 会原生保留这些元数据；对于只暴露 `name` 和
@@ -37,17 +37,12 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 
 ## 当前 Skill
 
-- `interactive-visual-explainer`：为适合通过图形和控件理解的知识点生成可离线打开的单文件交互式
-  HTML 讲解页。
-- `lesson-intro`：检索并生成有证据、妙趣横生且像人写的中文单文件 HTML 课程引入；研究信息可选地保留在页面之外，不污染学习者看到的内容。
-- `interactive-lecture-deck`：生成固定尺寸、自包含的 HTML 讲解课件，包含结构化 zoom 数据、protected-view
-  空间运行时、离线 `dist/lecture.html` 发布物与严格的视觉/结构校验。
-- `adaptive-pedagogy`：根据学习证据选择一个低摩擦、可解释的教学策略，避免不必要的阻塞式
-  追问。
-- `learner-state-reflector`：将学习事件压缩为谨慎、非阻塞的状态更新和验证债务建议，不作
-  教育诊断。
-- `quiz-generator`：基于已讲授的课程材料生成紧凑、无泄题、可诊断理解误区的中文知识点测评，
-  并提供确定性的契约校验与公开快照清理。
+- `visual_explainer`：为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。
+- `lesson_opener`：基于事实、问题、场景或误区设计自然有趣的课程开场，引导学习者产生对目标概念的兴趣。
+- `lecture_builder`：构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。
+- `adaptive_tutor`：根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
+- `state_observer`：将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
+- `quiz_builder`：基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
 
 ## 本地校验
 
@@ -56,12 +51,12 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 ```bash
 python -m venv .venv
 python -m pip install -r requirements-dev.txt
-python -m skills_ref.cli validate skills/interactive-visual-explainer
-python -m skills_ref.cli validate skills/lesson-intro
-python -m skills_ref.cli validate skills/interactive-lecture-deck
-python -m skills_ref.cli validate skills/adaptive-pedagogy
-python -m skills_ref.cli validate skills/learner-state-reflector
-python -m skills_ref.cli validate skills/quiz-generator
+python -m skills_ref.cli validate skills/visual_explainer
+python -m skills_ref.cli validate skills/lesson_opener
+python -m skills_ref.cli validate skills/lecture_builder
+python -m skills_ref.cli validate skills/adaptive_tutor
+python -m skills_ref.cli validate skills/state_observer
+python -m skills_ref.cli validate skills/quiz_builder
 ```
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。

@@ -1,0 +1,4 @@
+interface:
+  display_name: "知识点测评生成"
+  short_description: "基于已讲授内容生成无泄题、可诊断理解误区的中文知识点测评"
+  default_prompt: "使用 $quiz_builder 基于提供的中文课程材料生成一组紧凑、可判分且不泄露答案的知识点测评。"
