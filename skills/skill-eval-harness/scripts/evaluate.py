@@ -291,6 +291,30 @@ def validate_known_output(output: Any, validator: str | None, findings: list[dic
             add(findings, "component.offline_artifact", "fail", "HTML 含外部网络依赖")
         else:
             add(findings, "component.artifact_shape", "pass", "HTML 是自包含文档")
+    elif validator == "lesson-intro-html.v1":
+        html = output if isinstance(output, str) else get_path(output, "html")
+        if not isinstance(html, str):
+            add(findings, "component.artifact_shape", "fail", "lesson-intro 必须输出 HTML 字符串")
+            return
+        checks = (
+            ("<!doctype html>" in html.lower() and '<html lang="zh-cn"' in html.lower(), "HTML 文档与语言声明齐全"),
+            (len(re.findall(r"(?is)<figure\b", html)) >= 1 and len(re.findall(r"(?is)<figcaption\b", html)) >= 1, "存在 figure/figcaption 阅读结构"),
+            (bool(re.search(r"(?is)<svg\b[^>]*\bviewbox\s*=\s*['\"]0\s+0\s+680\s+\d+", html)), "主视觉使用 680 宽 SVG 坐标系"),
+            (all(token in html for token in ("--paper", "--surface", "--ink-1", "--ink-2", "--rule", "--accent", "--font-serif", "--font-sans", "--font-mono")), "使用共享视觉 token"),
+            (bool(re.search(r"(?is)prefers-color-scheme\s*:\s*dark", html)) and bool(re.search(r"(?is)@media\s+print", html)), "包含显式暗色与打印回退"),
+            (not re.search(r"(?is)(?:linear|radial)-gradient|box-shadow|drop-shadow|backdrop-filter|\bfilter\s*:", html), "没有渐变、阴影或滤镜"),
+            (not re.search(r"(?is)font-weight\s*:\s*(?:600|700|800|900)\b|border-radius\s*:\s*(?:1[3-9]|[2-9]\d|\d{3,})px", html), "字重与圆角符合视觉约束"),
+        )
+        for passed, message in checks:
+            add(findings, "component.visual_contract", "pass" if passed else "fail", message)
+        text_tags = re.findall(r"(?is)<text\b([^>]*)>", html)
+        text_classes_ok = True
+        for attrs in text_tags:
+            class_match = re.search(r"(?i)\bclass\s*=\s*['\"]([^'\"]+)['\"]", attrs)
+            if not class_match or not re.search(r"(?:^|\s)(?:t|ts|th|tn)(?:\s|$)", class_match.group(1)):
+                text_classes_ok = False
+                break
+        add(findings, "component.svg_text_classes", "pass" if text_tags and text_classes_ok else "fail", "SVG text 使用 t/ts/th/tn 类")
     elif validator:
         add(findings, "component.validator", "not_observed", f"未内置 validator：{validator}", "warning")
 

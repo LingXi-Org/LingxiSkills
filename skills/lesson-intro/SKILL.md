@@ -42,8 +42,10 @@ When the supplied context cannot support a factual hook, use a clearly framed ob
 counterfactual, or thought experiment instead. Keep the claim modest and let the lesson answer the
 question later.
 
-Read `references/input-grounding.md` for the direct-generation evidence boundary and
-`references/hook-patterns.md` only when choosing a hook pattern.
+Read `references/input-grounding.md` for the direct-generation evidence boundary,
+`references/visual-contract.md` before authoring any HTML, and `references/hook-patterns.md` only
+when choosing a hook pattern. `references/visual-contract.md` is the shared visual baseline adapted
+from `interactive-visual-explainer` and `interactive-lecture-deck`.
 
 ## Output contract
 
@@ -68,13 +70,18 @@ metadata into the page.
 4. Draft a compact arc: scene or observation → surprising turn → one concrete question → natural
    bridge into the target concept. Keep the bridge honest: the page is an invitation, not the full
    lesson.
-5. Build the page with one concept-specific visual motif only when it clarifies the idea. Prefer a
-   static page when motion or interaction adds noise.
-6. Run the HTML quality gate and validate the artifact with `scripts/validate_output.py`.
+5. Build the page around one dominant, concept-specific figure. Prefer a relation diagram or
+   comparison with inline SVG over a decorative illustration or a stack of cards.
+6. Apply the shared visual contract: canonical tokens, serif display title, sans body, hairline
+   rules, no gradients/shadows/glass, at most three semantic colors, and a deliberate dark mode.
+7. Run the HTML quality gate, the shared palette checker when colors change, and
+   `scripts/validate_output.py`.
 
 ## Editorial autonomy
 
 - Prefer a specific, understandable moment over generic “this topic is important” language.
+- Prefer a conclusion-shaped title, a large visual, and a short caption over multiple small content
+  cards. The page should feel closer to an editorial opening slide than a dashboard.
 - Use conversational Simplified Chinese, short paragraphs, concrete verbs, and restrained warmth.
 - Match the level: novices get a concrete scene and one tension; advanced learners may get a tradeoff,
   boundary condition, or competing model already supported by the input.
@@ -84,8 +91,8 @@ metadata into the page.
 
 ## Single-file HTML design
 
-Follow `references/html-design.md` for the visual craft pass when a designed reading page helps. The
-essential constraints are:
+Follow `references/visual-contract.md` and then `references/html-design.md` for the visual craft
+pass. The essential constraints are:
 
 - return one complete `<!doctype html>` document with `<html lang="zh-CN">`, UTF-8 metadata, a
   meaningful `<title>`, and a real `<body>`;
@@ -93,12 +100,15 @@ essential constraints are:
   analytics, or network requests;
 - make the page readable on a phone and a desktop, with visible focus states and a
   `prefers-reduced-motion` fallback;
-- use semantic headings and landmarks, one `h1`, at most two `h2` headings, and short readable
-  paragraphs;
+- use semantic headings and landmarks, one `h1`, at most two `h2` headings, short readable
+  paragraphs, and at least one `figure` with a `figcaption`;
+- make the dominant visual an inline SVG or CSS diagram that is already meaningful in the first
+  frame; for SVG use a `viewBox` width of `680` and classes `t`, `ts`, `th`, or `tn` on every
+  `<text>` element;
 - keep the visible page compact: normally 180–420 Chinese characters and a 45–120 second read,
   but shorten or extend it when the idea genuinely calls for it;
-- prefer one restrained interaction—such as revealing a hint or gently changing a diagram state—
-  only when it clarifies the question. Static pages are preferred when interaction adds noise;
+- prefer a static page. Add at most one restrained interaction—such as revealing a hint or gently
+  changing a diagram state—only when it clarifies the question;
 - do not put URLs, search notes, source lists, scores, or diagnostic labels in the page;
 - do not hide internal parameters in HTML comments, `data-*` attributes, or script variables.
 
@@ -120,11 +130,13 @@ Before returning:
    never compensate for missing context with web browsing or result aggregation.
 2. Check that the page has no external asset, network dependency, hidden metadata, or internal
    implementation text and remains useful with JavaScript disabled.
-3. Check that the opening creates curiosity, the target concept is necessary, and the ending hands
+3. Check that the page follows `visual-contract.md`: no gradients/shadows/blur, no arbitrary colors,
+   no oversized radii, no decorative hero, no card grid, and a dominant explanatory visual.
+4. Check that the opening creates curiosity, the target concept is necessary, and the ending hands
    off cleanly to the lesson.
-4. Check that the page contains one main question, a concrete scene or observation, and no candidate
+5. Check that the page contains one main question, a concrete scene or observation, and no candidate
    comparison or research summary.
-5. Validate the HTML itself, or the optional minimal envelope, with `scripts/validate_output.py`.
+6. Validate the HTML itself, or the optional minimal envelope, with `scripts/validate_output.py`.
 
 ## Result shape
 

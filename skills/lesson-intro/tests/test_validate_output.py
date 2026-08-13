@@ -30,6 +30,16 @@ class LessonIntroValidatorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validator.validate_envelope({"html": self.html, "visible_citations": True})
 
+    def test_visual_contract_rejects_heavy_card_style(self):
+        bad = self.html.replace("<style>", "<style>main{border-radius:24px}", 1)
+        with self.assertRaises(ValueError):
+            validator.validate_html(bad)
+
+    def test_visual_contract_rejects_unclassed_svg_text(self):
+        bad = self.html.replace('<text class="th"', '<text', 1)
+        with self.assertRaises(ValueError):
+            validator.validate_html(bad)
+
 
 if __name__ == "__main__":
     unittest.main()

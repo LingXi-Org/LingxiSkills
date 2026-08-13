@@ -127,6 +127,30 @@ def validate_html(html: str) -> None:
         fail("HTML must contain exactly one h1")
     if parser.h2_count > 2:
         fail("HTML may contain at most two h2 headings")
+    if len(re.findall(r"(?is)<figure\b", html)) < 1 or len(re.findall(r"(?is)<figcaption\b", html)) < 1:
+        fail("HTML must contain a dominant figure with a figcaption")
+    svg_tags = re.findall(r"(?is)<svg\b([^>]*)>", html)
+    if not svg_tags:
+        fail("HTML must contain an inline SVG concept visual")
+    if not all(re.search(r"(?i)\bviewbox\s*=\s*['\"]0\s+0\s+680\s+\d+", attrs) for attrs in svg_tags):
+        fail("SVG viewBox must use width 680")
+    for attrs in re.findall(r"(?is)<text\b([^>]*)>", html):
+        class_match = re.search(r"(?i)\bclass\s*=\s*['\"]([^'\"]+)['\"]", attrs)
+        if not class_match or not re.search(r"(?:^|\s)(?:t|ts|th|tn)(?:\s|$)", class_match.group(1)):
+            fail("every SVG text element must use class t, ts, th, or tn")
+    required_tokens = ("--paper", "--surface", "--ink-1", "--ink-2", "--rule", "--accent", "--font-serif", "--font-sans", "--font-mono")
+    if not all(token in html for token in required_tokens):
+        fail("HTML must use the shared visual tokens")
+    if not re.search(r"(?is)prefers-color-scheme\s*:\s*dark", html):
+        fail("HTML must define an explicit dark mode")
+    if not re.search(r"(?is)@media\s+print", html):
+        fail("HTML must define a print fallback")
+    if re.search(r"(?is)(?:linear|radial)-gradient|box-shadow|drop-shadow|backdrop-filter|\bfilter\s*:", html):
+        fail("HTML must not use gradients, shadows, blur, or filters")
+    if re.search(r"(?is)font-weight\s*:\s*(?:600|700|800|900)\b", html):
+        fail("HTML may use only 400/500 font weights")
+    if re.search(r"(?is)border-radius\s*:\s*(?:1[3-9]|[2-9]\d|\d{3,})px", html):
+        fail("HTML must use radii no larger than 12px")
     if len(parser.visible_text) < 60:
         fail("HTML visible text is too short to form a useful lesson introduction")
     if parser.external_resource:

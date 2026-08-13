@@ -15,7 +15,7 @@
         "target_duration_sec": 60,
         "preferred_hook_type": "everyday"
       },
-      "validator": "html",
+      "validator": "lesson-intro-html.v1",
       "expectations": {
         "required_output_keys": ["html"],
         "learner_facing_paths": ["html"],
@@ -26,7 +26,7 @@
         "required_layers": ["component", "trajectory", "pedagogy"]
       },
       "output": {
-        "html": "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>雨后的石板路</title><style>body{font:16px/1.8 sans-serif;max-width:42rem;margin:4rem auto;padding:0 1rem;color:#20342b}main{background:#f4f1e8;padding:2rem;border-radius:1rem}</style></head><body><main><h1>为什么雨后的石板路更容易打滑？</h1><p>雨水刚落下，熟悉的路面像换了一种性格。鞋底轻轻一偏，身体就开始向前溜。</p><p>先猜一猜：水改变的究竟是什么？接下来，我们用摩擦力解释脚底这场看不见的较量。</p></main></body></html>"
+        "html": "<!doctype html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>雨后的石板路</title><style>:root{--paper:#fbfaf7;--surface:#fff;--ink-1:#23231f;--ink-2:#5f5e5a;--rule:rgba(35,35,31,.14);--accent:#534ab7;--c1:#7f77dd;--c2:#1d9e75;--c3:#d85a30;--font-serif:serif;--font-sans:sans-serif;--font-mono:monospace}@media(prefers-color-scheme:dark){:root{--paper:#1a1a19;--surface:#232322;--ink-1:#edebe4}}@media print{body{background:#fff}}body{background:var(--paper);color:var(--ink-1);font:18px/1.7 var(--font-sans)}figure{max-width:680px}svg{width:100%}.t,.ts,.th,.tn{fill:var(--ink-1)}figcaption{color:var(--ink-2)}</style></head><body><main><h1>为什么雨后的石板路更容易打滑？</h1><p>雨水刚落下，熟悉的路面像换了一种性格。鞋底轻轻一偏，身体就开始向前溜。</p><figure><svg viewBox=\"0 0 680 240\" role=\"img\"><title>接触界面的变化</title><text class=\"th\" x=\"60\" y=\"60\">接触界面</text><line x1=\"60\" y1=\"110\" x2=\"620\" y2=\"110\" stroke=\"var(--c1)\"/></svg><figcaption>图 1 · 水改变的也许不是路面，而是鞋底与地面相遇的方式。</figcaption></figure><p>先猜一猜：摩擦力究竟在什么时候帮我们站稳？接下来，我们把脚底的感觉变成可以判断的规律。</p></main></body></html>"
       },
       "trajectory": {
         "learner_facing_writer_count": 1,
