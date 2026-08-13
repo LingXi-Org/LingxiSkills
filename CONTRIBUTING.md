@@ -1,6 +1,6 @@
 # Contributing Skills
 
-1. Create one lowercase, two-word, underscore-separated Skill directory under `skills/`.
+1. Create one lowercase, lowercase, hyphenated Skill directory under `skills/`.
 2. Add a standard `SKILL.md` with only the supported frontmatter fields.
 3. Keep the body concise and imperative. Link directly to any conditional
    details in `references/`.
@@ -10,7 +10,7 @@
    content and require an independently authorized execution tool.
 6. Add the common `metadata` keys `author`, `version`, `display-name`,
    `display-description`, `output-language`, and `output-contract`. Keep the
-   standard runtime `name` English and snake_case; keep Chinese display values
+   standard runtime `name` English and kebab-case; keep Chinese display values
    explicit and user-facing.
 7. State the Chinese-output contract in the body and keep generated prose,
    labels, and artifact text in Simplified Chinese.

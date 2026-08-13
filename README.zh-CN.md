@@ -8,7 +8,7 @@ frontmatter 的 `SKILL.md`，并可包含 `scripts/`、`references/` 与 `assets
 
 ## 元数据与产物约定
 
-每个 Skill 使用英文小写、两个单词以下划线连接的 `name` 作为标准运行时标识，并在
+每个 Skill 使用英文小写 kebab-case `name` 作为标准运行时标识，并在
 `metadata` 中统一提供 `display-name`、`display-description`、
 `output-language: zh-CN`、`output-contract`、`version` 和 `author`。Skill
 加载后，LingxiGraph 会原生保留这些元数据；对于只暴露 `name` 和
@@ -37,12 +37,12 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 
 ## 当前 Skill
 
-- `visual_explainer`：为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。
-- `lesson_opener`：基于事实、问题、场景或误区设计自然有趣的课程开场，引导学习者产生对目标概念的兴趣。
-- `lecture_builder`：构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。
-- `adaptive_tutor`：根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
-- `state_observer`：将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
-- `quiz_builder`：基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
+- `interactive-visual-explainer`：为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。
+- `lesson-intro`：基于事实、问题、场景或误区设计自然有趣的课程开场，引导学习者产生对目标概念的兴趣。
+- `interactive-lecture-deck`：构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。
+- `adaptive-pedagogy`：根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
+- `learner-state-reflector`：将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
+- `quiz-generator`：基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
 
 ## 本地校验
 
@@ -51,12 +51,12 @@ ToolSpec 授权、HITL、timeout、预算或其他策略控制。
 ```bash
 python -m venv .venv
 python -m pip install -r requirements-dev.txt
-python -m skills_ref.cli validate skills/visual_explainer
-python -m skills_ref.cli validate skills/lesson_opener
-python -m skills_ref.cli validate skills/lecture_builder
-python -m skills_ref.cli validate skills/adaptive_tutor
-python -m skills_ref.cli validate skills/state_observer
-python -m skills_ref.cli validate skills/quiz_builder
+python -m skills_ref.cli validate skills/interactive-visual-explainer
+python -m skills_ref.cli validate skills/lesson-intro
+python -m skills_ref.cli validate skills/interactive-lecture-deck
+python -m skills_ref.cli validate skills/adaptive-pedagogy
+python -m skills_ref.cli validate skills/learner-state-reflector
+python -m skills_ref.cli validate skills/quiz-generator
 ```
 
 详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
