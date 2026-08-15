@@ -17,6 +17,10 @@ metadata:
   state-write-mode: proposal-only
   parallel-safe: true
   latency-class: offline
+  capabilities: graph.build
+  status-line: 正在整理课程知识结构…
+  provider: curriculum_graph
+  ownership: dedicated
   eval-suite: curriculum-graph-builder-v1
 ---
 
