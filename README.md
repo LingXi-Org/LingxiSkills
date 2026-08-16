@@ -4,7 +4,7 @@
 
 **Composable Agent Skills for AI learning products.**
 
-Reusable teaching, assessment, visualization, learner-state, runtime, and evaluation capabilities for the LingXi stack.
+Reusable teaching, visualization, assessment, learner-state, runtime, orchestration, and evaluation capabilities for the LingXi stack.
 
 [简体中文](README.zh-CN.md) · [LingxiGraph](https://github.com/LingXi-Org/LingxiGraph) · [LingxiLearn](https://github.com/LingXi-Org/LingxiLearn)
 
@@ -14,7 +14,9 @@ Reusable teaching, assessment, visualization, learner-state, runtime, and evalua
 
 LingxiSkills is the reusable capability layer of the LingXi stack. Each Skill is an independently discoverable directory centered on a `SKILL.md` contract, with optional references, scripts, assets, agents, and tests.
 
-The repository does not provide a standalone runtime. Products such as LingxiLearn consume these capabilities through LingxiGraph or another compatible Agent Skills runtime.
+The repository currently contains **31 top-level Skills**. They cover learner-facing teaching capabilities as well as runtime control, orchestration, validation, evidence, and reusable utility contracts.
+
+Products such as LingxiLearn consume these capabilities through LingxiGraph or another compatible Agent Skills runtime.
 
 ```text
 Learning Product
@@ -27,18 +29,56 @@ LingxiSkills
 SKILL.md · References · Scripts · Assets
 ```
 
-## Capabilities
+## Current Skills
 
-LingxiSkills covers several capability families:
+### Teaching & dialogue
 
-- **Teaching & dialogue** — adaptive tutoring, explanation, probing, interviewing, and learning companionship.
-- **Content & visualization** — lesson introductions, lecture decks, and interactive visual explainers.
-- **Assessment & practice** — quiz generation, formative assessment, grading, and retrieval practice.
-- **Learner state & curriculum** — reflection, prerequisite analysis, review scheduling, and curriculum graphs.
-- **Orchestration & runtime** — goal interpretation, planning support, orchestration policy, negotiation, and graceful degradation.
-- **Quality & utilities** — artifact validation, evidence emission, structured output, evaluation, and Skill authoring support.
+- `adaptive-pedagogy`
+- `knowledge-qa`
+- `learner-interview`
+- `learning-companion`
+- `negotiation`
+- `socratic-prober`
 
-The repository is the source of truth. Skills are discovered directly from `skills/*/SKILL.md`; do not maintain a second hand-written catalog.
+### Content & visualization
+
+- `lesson-intro`
+- `interactive-lecture-deck`
+- `interactive-visual-explainer`
+
+### Assessment & practice
+
+- `deterministic-grader`
+- `formative-assessor`
+- `quiz-generator`
+- `retrieval-practice-builder`
+
+### Learner state & curriculum
+
+- `curriculum-graph-builder`
+- `learner-state-reflector`
+- `learning-report`
+- `prerequisite-analyzer`
+- `profile-reader`
+- `review-scheduler`
+
+### Orchestration & runtime
+
+- `goal-interpreter`
+- `graceful-degradation`
+- `incremental-delivery`
+- `orchestrator-policy`
+- `plan-presenter`
+
+### Quality & utilities
+
+- `artifact-validator`
+- `evidence-emitter`
+- `product-page-component-rewriter`
+- `skill-eval-harness`
+- `skill-forge`
+- `structured-output`
+- `tool-investigator`
 
 ## Quick start
 
@@ -75,7 +115,7 @@ skills/<skill-name>/
 └── tests/          optional regression tests
 ```
 
-`SKILL.md` defines the capability contract and remains the single source of truth for both runtime discovery and human-facing documentation. Runtime authorization, HITL, timeout, budget, and tool permissions remain the responsibility of the host runtime.
+`SKILL.md` defines the capability contract. Runtime authorization, HITL, timeout, budget, and tool permissions remain the responsibility of the host runtime.
 
 ## Validation
 
@@ -85,9 +125,11 @@ python -m skills_ref.cli validate skills/adaptive-pedagogy
 python skills/skill-eval-harness/scripts/run_suite.py .
 ```
 
+The repository CI also validates every top-level `skills/*/SKILL.md` on pushes and pull requests.
+
 ## Contributing
 
-Keep `SKILL.md` concise and put detailed supporting material in `references/`, deterministic helpers in `scripts/`, and reusable output resources in `assets/`.
+Keep `SKILL.md` concise and put detailed supporting material in `references/`, deterministic helpers in `scripts/`, reusable output resources in `assets/`, and regression coverage in `tests/` when applicable.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
