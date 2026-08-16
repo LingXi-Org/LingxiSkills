@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     siteName: 'LingxiSkills',
     type: 'website',
   },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+  },
   robots: { index: true, follow: true },
 };
 

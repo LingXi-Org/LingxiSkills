@@ -40,7 +40,15 @@ export function DocsLayout({ children }: { children: ReactNode }) {
   return (
     <FumadocsDocsLayout
       tree={pageTree}
-      nav={{ enabled: false }}
+      nav={{
+        enabled: false,
+        title: (
+          <span className="inline-flex items-center gap-2.5 font-medium">
+            <img src="/logo-icon.svg" width="28" height="28" alt="" />
+            <span>LingxiSkills</span>
+          </span>
+        ),
+      }}
       searchToggle={{ enabled: false }}
       themeSwitch={{ enabled: false }}
       sidebar={{ collapsible: false }}

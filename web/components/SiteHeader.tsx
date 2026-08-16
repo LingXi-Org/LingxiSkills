@@ -6,7 +6,7 @@ export function SiteHeader() {
     <header className="site-header">
       <div className="shell header-inner">
         <Link className="brand" href="/" aria-label="LingxiSkills home">
-          <span className="brand-mark" aria-hidden="true">LX</span>
+          <img className="brand-logo" src="/logo-icon.svg" width="28" height="28" alt="" />
           <span>LingxiSkills</span>
         </Link>
         <nav className="header-nav" aria-label="Primary navigation">

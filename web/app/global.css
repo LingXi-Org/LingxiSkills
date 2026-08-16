@@ -1,3 +1,28 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/* Keep Fumadocs primitives on the same monochrome palette as the registry. */
+@theme inline {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-muted: var(--surface);
+  --color-fd-muted-foreground: var(--secondary);
+  --color-fd-popover: var(--background);
+  --color-fd-popover-foreground: var(--foreground);
+  --color-fd-card: var(--background);
+  --color-fd-card-foreground: var(--foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: var(--accent);
+  --color-fd-primary-foreground: var(--background);
+  --color-fd-secondary: var(--surface);
+  --color-fd-secondary-foreground: var(--foreground);
+  --color-fd-accent: var(--hover);
+  --color-fd-accent-foreground: var(--foreground);
+  --color-fd-ring: var(--accent);
+  --color-fd-overlay: rgb(0 0 0 / 20%);
+}
+
 :root {
   --background: #ffffff;
   --surface: #fafafa;
@@ -23,7 +48,7 @@ code, pre, .eyebrow, .skill-slug, .version, .meta-value { font-family: ui-monosp
 .header-inner { min-height: 68px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.02em; }
 .brand:hover { text-decoration: none; }
-.brand-mark { width: 28px; height: 28px; display: inline-grid; place-items: center; border: 1px solid var(--foreground); font-size: 10px; letter-spacing: -.08em; }
+.brand-logo { width: 28px; height: 28px; display: block; }
 .header-nav { display: flex; gap: 22px; color: var(--secondary); font-size: 14px; }
 .header-nav a:hover { color: var(--foreground); }
 .search-trigger { display: inline-flex; align-items: center; gap: 8px; border: 0; padding: 0; background: transparent; color: inherit; font-size: inherit; }
