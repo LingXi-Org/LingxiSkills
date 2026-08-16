@@ -1,0 +1,62 @@
+{
+  "repositorySkillSlugs": [
+    "adaptive-pedagogy",
+    "curriculum-graph-builder",
+    "formative-assessor",
+    "interactive-lecture-deck",
+    "interactive-visual-explainer",
+    "learner-state-reflector",
+    "lesson-intro",
+    "quiz-generator",
+    "retrieval-practice-builder",
+    "skill-eval-harness"
+  ],
+  "generatedCatalogSlugs": [
+    "adaptive-pedagogy",
+    "curriculum-graph-builder",
+    "formative-assessor",
+    "interactive-lecture-deck",
+    "interactive-visual-explainer",
+    "learner-state-reflector",
+    "lesson-intro",
+    "quiz-generator",
+    "retrieval-practice-builder",
+    "skill-eval-harness"
+  ],
+  "registrySlugs": [
+    "adaptive-pedagogy",
+    "curriculum-graph-builder",
+    "formative-assessor",
+    "interactive-lecture-deck",
+    "interactive-visual-explainer",
+    "learner-state-reflector",
+    "lesson-intro",
+    "quiz-generator",
+    "retrieval-practice-builder",
+    "skill-eval-harness"
+  ],
+  "searchIndexSlugs": [
+    "adaptive-pedagogy",
+    "curriculum-graph-builder",
+    "formative-assessor",
+    "interactive-lecture-deck",
+    "interactive-visual-explainer",
+    "learner-state-reflector",
+    "lesson-intro",
+    "quiz-generator",
+    "retrieval-practice-builder",
+    "skill-eval-harness"
+  ],
+  "staticPageSlugs": [
+    "adaptive-pedagogy",
+    "curriculum-graph-builder",
+    "formative-assessor",
+    "interactive-lecture-deck",
+    "interactive-visual-explainer",
+    "learner-state-reflector",
+    "lesson-intro",
+    "quiz-generator",
+    "retrieval-practice-builder",
+    "skill-eval-harness"
+  ]
+}

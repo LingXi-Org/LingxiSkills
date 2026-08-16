@@ -1,0 +1,33 @@
+{
+  "name": "lingxiskills-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static LingxiSkills capability registry generated from skills/*/SKILL.md",
+  "scripts": {
+    "discover": "node scripts/discover-skills.mjs",
+    "generate": "node scripts/generate-skills.mjs",
+    "check": "npm run generate && node scripts/check-skills.mjs",
+    "typecheck": "tsc --noEmit",
+    "dev": "next dev",
+    "build": "npm run check && next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "fumadocs-core": "16.14.4",
+    "fumadocs-mdx": "15.2.3",
+    "fumadocs-ui": "16.14.4",
+    "next": "16.3.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.15.3",
+    "@types/react": "19.1.2",
+    "@types/react-dom": "19.1.2",
+    "postcss": "8.5.3",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  }
+}
+

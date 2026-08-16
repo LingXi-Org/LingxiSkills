@@ -1,0 +1,177 @@
+[
+  {
+    "slug": "adaptive-pedagogy",
+    "name": "adaptive-pedagogy",
+    "displayName": "自适应教学",
+    "displayDescription": "根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。",
+    "description": "Select one evidence-based, low-friction tutoring action from learner evidence and return an immediately useful response with optional state or visual requests.",
+    "category": "Teaching & Dialogue",
+    "phase": "teach",
+    "capabilities": [
+      "adaptive-pedagogy"
+    ],
+    "version": "1.1.0",
+    "criticalPath": true,
+    "learnerFacing": true,
+    "parallelSafe": false,
+    "sourcePath": "skills/adaptive-pedagogy/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/adaptive-pedagogy/SKILL.md"
+  },
+  {
+    "slug": "curriculum-graph-builder",
+    "name": "curriculum-graph-builder",
+    "displayName": "个性化课程知识图谱构建",
+    "displayDescription": "根据学习上下文和用户已有知识图谱，决定新建或扩充图谱，并生成可持久化的结构化节点、关系与学习状态补丁。",
+    "description": "Build or incrementally extend a learner-specific curriculum knowledge graph from structured learning context while preserving stable node IDs, explicit relation direction, curricular importance, optional hierarchy/layout hints, and learner-state overlays. Decide whether to create a new graph or extend an existing graph, and return a deterministic graph patch for the host system to validate and persist.",
+    "category": "Learner State & Curriculum",
+    "phase": "authoring",
+    "capabilities": [
+      "curriculum-graph-builder"
+    ],
+    "version": "1.1.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/curriculum-graph-builder/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/curriculum-graph-builder/SKILL.md"
+  },
+  {
+    "slug": "formative-assessor",
+    "name": "formative-assessor",
+    "displayName": "形成性评估解释器",
+    "displayDescription": "将确定性判分证据转为可追溯的学习证据状态和教学策略信号。",
+    "description": "Convert deterministic grader, rubric, tool, and explicit learner signals into a structured formative-assessment interpretation for adaptive teaching. Use after a learner attempt when the host needs evidence state, error pattern, verification status, or a policy signal; do not use it to guess learner psychology or write a student-facing response.",
+    "category": "Assessment & Practice",
+    "phase": "assess",
+    "capabilities": [
+      "formative-assessor"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "learnerFacing": false,
+    "parallelSafe": false,
+    "sourcePath": "skills/formative-assessor/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/formative-assessor/SKILL.md"
+  },
+  {
+    "slug": "interactive-lecture-deck",
+    "name": "interactive-lecture-deck",
+    "displayName": "交互式讲解课件",
+    "displayDescription": "构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。",
+    "description": "Build a fixed-size, self-contained HTML lecture deck with visual slides, structured explanations, zoom data, and offline delivery.",
+    "category": "Content & Visualization",
+    "phase": "prepare",
+    "capabilities": [
+      "interactive-lecture-deck"
+    ],
+    "version": "1.3.0",
+    "criticalPath": true,
+    "parallelSafe": true,
+    "sourcePath": "skills/interactive-lecture-deck/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/interactive-lecture-deck/SKILL.md"
+  },
+  {
+    "slug": "interactive-visual-explainer",
+    "name": "interactive-visual-explainer",
+    "displayName": "交互式可视化讲解",
+    "displayDescription": "为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。",
+    "description": "Create a self-contained, offline interactive HTML explainer for concepts that are easier to understand through visual manipulation.",
+    "category": "Teaching & Dialogue",
+    "phase": "teach",
+    "capabilities": [
+      "interactive-visual-explainer"
+    ],
+    "version": "1.3.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/interactive-visual-explainer/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/interactive-visual-explainer/SKILL.md"
+  },
+  {
+    "slug": "learner-state-reflector",
+    "name": "learner-state-reflector",
+    "displayName": "学习状态反思",
+    "displayDescription": "将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。",
+    "description": "Compress recent learning events into cautious, traceable learner-state update proposals without interrupting instruction.",
+    "category": "Learner State & Curriculum",
+    "phase": "learner-model",
+    "capabilities": [
+      "learner-state-reflector"
+    ],
+    "version": "1.1.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/learner-state-reflector/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/learner-state-reflector/SKILL.md"
+  },
+  {
+    "slug": "lesson-intro",
+    "name": "lesson-intro",
+    "displayName": "课程引入",
+    "displayDescription": "基于已有课程上下文直接生成自然有趣的课程开场 HTML，不联网搜索或聚合检索结果。",
+    "description": "Directly create a warm, self-contained Chinese HTML lesson opening from the supplied topic and curriculum context. Use when a learner needs a compact scene, puzzle, misconception, or question that makes a target concept worth learning; do not browse the web or aggregate search results.",
+    "category": "Teaching & Dialogue",
+    "phase": "prepare",
+    "capabilities": [
+      "lesson-intro"
+    ],
+    "version": "4.2.0",
+    "criticalPath": true,
+    "parallelSafe": true,
+    "sourcePath": "skills/lesson-intro/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/lesson-intro/SKILL.md"
+  },
+  {
+    "slug": "quiz-generator",
+    "name": "quiz-generator",
+    "displayName": "知识点测评生成",
+    "displayDescription": "基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。",
+    "description": "Generate a compact, evidence-grounded formative quiz from taught lesson content to assess understanding and reveal misconceptions.",
+    "category": "Assessment & Practice",
+    "phase": "assess",
+    "capabilities": [
+      "quiz-generator"
+    ],
+    "version": "1.1.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/quiz-generator/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/quiz-generator/SKILL.md"
+  },
+  {
+    "slug": "retrieval-practice-builder",
+    "name": "retrieval-practice-builder",
+    "displayName": "检索练习构建器",
+    "displayDescription": "预取基于学习证据的检索、迁移、边界和误区辨析任务。",
+    "description": "Build and prefetch one evidence-grounded retrieval, transfer, boundary-case, or misconception- discriminator task from taught content and learner evidence. Use after a concept checkpoint or while the learner is answering another task; discard the cache when the topic or evidence changes. Do not use it as a blocking tutor or as a replacement for deterministic grading.",
+    "category": "Assessment & Practice",
+    "phase": "assess",
+    "capabilities": [
+      "retrieval-practice-builder"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/retrieval-practice-builder/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/retrieval-practice-builder/SKILL.md"
+  },
+  {
+    "slug": "skill-eval-harness",
+    "name": "skill-eval-harness",
+    "displayName": "教学 Skill 评测",
+    "displayDescription": "从组件契约、执行轨迹、教学质量和学习结果四层评测教学 Skill。",
+    "description": "Evaluate Lingxi teaching Skills and their run artifacts across component contracts, execution trajectories, pedagogical safety/quality, and learner outcomes. Use when a Skill is added or revised, when a regression suite must be run, or when raw task/result/trace/outcome JSON needs a deterministic report; do not use it in the learner's runtime path.",
+    "category": "Quality & Utilities",
+    "phase": "development",
+    "capabilities": [
+      "skill-eval-harness"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/skill-eval-harness/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/skill-eval-harness/SKILL.md"
+  }
+]

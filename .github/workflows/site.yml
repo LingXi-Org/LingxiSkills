@@ -1,0 +1,62 @@
+name: Build and deploy LingxiSkills site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+      - 'web/**'
+      - '.github/workflows/site.yml'
+      - '.github/workflows/validate.yml'
+  pull_request:
+    paths:
+      - 'skills/**'
+      - 'web/**'
+      - '.github/workflows/site.yml'
+      - '.github/workflows/validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci --prefix web
+      - name: Build static export
+        run: npm run build --prefix web
+      - name: Upload static output
+        uses: actions/upload-artifact@v4
+        with:
+          name: lingxiskills-site
+          path: web/out
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci --prefix web
+      - name: Build export for Pages
+        run: npm run build --prefix web
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy web/out --project-name=lingxiskills
+

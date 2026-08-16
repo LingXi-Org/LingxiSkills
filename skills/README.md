@@ -2,18 +2,13 @@
 
 这里是 LingxiLearn 当前实际开发并可被项目加载的 Skills。每个目录至少包含一个 `SKILL.md`；目录里的 `references/` 是规则和契约，`assets/` 是模板与样例，`scripts/` 是校验或构建工具，`tests/` 是回归测试。
 
-## 当前 8 个 Skills
+## Skill catalog
 
-| Skill | 大白话说明 | 主要输出 |
-| --- | --- | --- |
-| `lesson-intro` | 把一个知识点变成有画面、有悬念的中文课程开场，让学习者产生“为什么会这样”的问题。 | 单文件 HTML 开场页 |
-| `interactive-lecture-deck` | 把课程内容整理成可离线打开的可视化课件，像一套能逐页讲清因果关系的幻灯片。 | 自包含 HTML 课件 |
-| `interactive-visual-explainer` | 对适合“动手看”的内容做交互式可视化，例如比较、几何、算法追踪和反例。 | 自包含交互 HTML |
-| `adaptive-pedagogy` | 根据学习者刚刚的回答和证据，决定现在给提示、举例、解释、迁移题还是让他复述。它负责主回复。 | 结构化教学决策 + 中文回复 |
-| `quiz-generator` | 从已经讲过的内容出少量但有诊断价值的题，重点发现真实误区，不考没讲过的冷知识。 | 可判分测评 JSON |
-| `learner-state-reflector` | 把一段时间内的答题和学习事件压缩成谨慎的状态更新建议，不打断教学。 | 学习状态更新提案 |
-| `curriculum-graph-builder` | 把课程内容整理成知识图谱的节点、关系和增量补丁，并保留稳定 ID；不会直接改数据库。 | 图谱 patch JSON |
-| `skill-eval-harness` | 像测试工具一样评估其它 Skill：契约是否正确、执行是否合理、教学是否安全、学习结果是否有证据。 | 评测报告 JSON |
+Skill directories are intentionally not listed here. The repository tree under
+`skills/*/SKILL.md` is the only source of truth, and the website scanner discovers every matching
+directory at build time. This README remains explanatory documentation rather than a registry or
+allowlist. To inspect the live catalog locally, run `npm run discover --prefix web` or
+`npm run check --prefix web`.
 
 ## Skill 内部的“子技能”怎么理解
 
@@ -28,7 +23,7 @@
 - `learner-state-reflector` 下面有事件压缩、证据追踪和状态提案校验。
 - `skill-eval-harness` 下面有组件、轨迹、教学质量、学习结果四层评测，以及单例和全仓 suite 工具。
 
-`formative-assessor` 和 `retrieval-practice-builder` 现在也已经纳入本项目的 `skills/` 目录，并与其它 8 个 Skill 一起参与本地维护和自动同步。
+所有同名 Skill 目录（包括 shared、runtime 和 utility 能力）都会参与本地维护和自动同步。
 
 ## 自动同步到 LingxiSkills
 

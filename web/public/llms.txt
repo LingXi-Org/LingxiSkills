@@ -1,0 +1,16 @@
+# LingxiSkills
+
+> A static capability registry generated directly from skills/*/SKILL.md.
+
+## Skills
+
+- [自适应教学](https://skills.lingxilearn.cn/skills/adaptive-pedagogy/): 根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
+- [个性化课程知识图谱构建](https://skills.lingxilearn.cn/skills/curriculum-graph-builder/): 根据学习上下文和用户已有知识图谱，决定新建或扩充图谱，并生成可持久化的结构化节点、关系与学习状态补丁。
+- [形成性评估解释器](https://skills.lingxilearn.cn/skills/formative-assessor/): 将确定性判分证据转为可追溯的学习证据状态和教学策略信号。
+- [交互式讲解课件](https://skills.lingxilearn.cn/skills/interactive-lecture-deck/): 构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。
+- [交互式可视化讲解](https://skills.lingxilearn.cn/skills/interactive-visual-explainer/): 为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。
+- [学习状态反思](https://skills.lingxilearn.cn/skills/learner-state-reflector/): 将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
+- [课程引入](https://skills.lingxilearn.cn/skills/lesson-intro/): 基于已有课程上下文直接生成自然有趣的课程开场 HTML，不联网搜索或聚合检索结果。
+- [知识点测评生成](https://skills.lingxilearn.cn/skills/quiz-generator/): 基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
+- [检索练习构建器](https://skills.lingxilearn.cn/skills/retrieval-practice-builder/): 预取基于学习证据的检索、迁移、边界和误区辨析任务。
+- [教学 Skill 评测](https://skills.lingxilearn.cn/skills/skill-eval-harness/): 从组件契约、执行轨迹、教学质量和学习结果四层评测教学 Skill。
