@@ -17,6 +17,10 @@ metadata:
   state-write-mode: none
   parallel-safe: true
   latency-class: background
+  capabilities: assess.generate
+  status-line: 正在准备一道检测题…
+  provider: quiz_generator
+  ownership: dedicated
   eval-suite: quiz-generator-v1
 ---
 

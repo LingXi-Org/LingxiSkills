@@ -20,6 +20,10 @@ metadata:
   state-write-mode: none
   parallel-safe: true
   latency-class: offline
+  capabilities: meta.evaluate
+  status-line: 正在检查技能表现…
+  provider: skill_eval
+  ownership: dedicated
   eval-suite: skill-eval-harness-v1
 ---
 
