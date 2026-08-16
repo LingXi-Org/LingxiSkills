@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { oramaStaticClient } from 'fumadocs-core/search/client/orama-static';
+import { useDocsSearch } from 'fumadocs-core/search/client';
 import type { SkillEntry } from '../lib/skills';
 import { SkillCard } from './SkillCard';
 
@@ -21,6 +23,8 @@ const initialFilters: Filters = {
 
 export function SkillExplorer({ skills, categories, phases }: { skills: SkillEntry[]; categories: string[]; phases: string[] }) {
   const [filters, setFilters] = useState<Filters>(initialFilters);
+  const searchClient = useMemo(() => oramaStaticClient({ from: '/api/search' }), []);
+  const indexedSearch = useDocsSearch({ client: searchClient, delayMs: 120 });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -33,7 +37,12 @@ export function SkillExplorer({ skills, categories, phases }: { skills: SkillEnt
       criticalPath: params.get('criticalPath') === 'true',
       parallelSafe: params.get('parallelSafe') === 'true',
     });
-  }, []);
+    indexedSearch.setSearch(params.get('q') ?? '');
+  }, [indexedSearch.setSearch]);
+
+  useEffect(() => {
+    if (indexedSearch.search !== filters.query) indexedSearch.setSearch(filters.query);
+  }, [filters.query, indexedSearch.search, indexedSearch.setSearch]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -49,11 +58,18 @@ export function SkillExplorer({ skills, categories, phases }: { skills: SkillEnt
   }, [filters]);
 
   const filtered = useMemo(() => {
-    const query = filters.query.trim().toLowerCase();
     const capability = filters.capability.trim().toLowerCase();
+    const query = filters.query.trim();
+    const indexedUrls = query && indexedSearch.search === query
+      ? indexedSearch.query.isLoading
+        ? null
+        : indexedSearch.query.data === 'empty'
+          ? new Set<string>()
+          : new Set(indexedSearch.query.data?.map((item) => item.url) ?? [])
+      : null;
     return skills.filter((skill) => {
-      const haystack = [skill.slug, skill.name, skill.displayName, skill.description, skill.displayDescription, skill.category, skill.phase, ...skill.capabilities].filter(Boolean).join(' ').toLowerCase();
-      return (!query || haystack.includes(query))
+      const skillUrl = `/skills/${skill.slug}/`;
+      return (!query || indexedUrls === null || indexedUrls.has(skillUrl))
         && (!filters.category || skill.category === filters.category)
         && (!filters.phase || skill.phase === filters.phase)
         && (!capability || skill.capabilities.some((item) => item.toLowerCase().includes(capability)))
@@ -112,4 +128,3 @@ export function SkillExplorer({ skills, categories, phases }: { skills: SkillEnt
     </div>
   );
 }
-

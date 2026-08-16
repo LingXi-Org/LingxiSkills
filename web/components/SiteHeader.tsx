@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { SearchTrigger } from './SearchTrigger';
 
 export function SiteHeader() {
   return (
@@ -9,6 +10,7 @@ export function SiteHeader() {
           <span>LingxiSkills</span>
         </Link>
         <nav className="header-nav" aria-label="Primary navigation">
+          <SearchTrigger />
           <Link href="/skills/">Registry</Link>
           <a href="https://github.com/LingXi-Org/LingxiSkills" rel="noreferrer">GitHub</a>
         </nav>
@@ -16,4 +18,3 @@ export function SiteHeader() {
     </header>
   );
 }
-

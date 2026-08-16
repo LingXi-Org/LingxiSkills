@@ -32,6 +32,7 @@ const catalog = readJson('skills.json');
 const catalogAlias = readJson('catalog.json');
 const registry = readJson('registry.json');
 const searchIndex = readJson('search-index.json');
+const searchDatabase = readJson('search-db.json');
 const routes = readJson('routes.json');
 const manifest = readJson('manifest.json');
 
@@ -39,11 +40,16 @@ const generatedCatalogSlugs = sortedUnique(catalog.map((entry) => entry.slug), '
 assertSetEqual(generatedCatalogSlugs, sortedUnique(catalogAlias.map((entry) => entry.slug), 'catalog alias'), 'skills.json ↔ catalog.json');
 const registrySlugs = sortedUnique(registry.map((entry) => entry.slug), 'registry');
 const searchIndexSlugs = sortedUnique(searchIndex.map((entry) => entry.slug), 'search index');
+const searchDatabaseSlugs = sortedUnique(
+  Object.values(searchDatabase.docs?.docs ?? {}).map((entry) => entry.id),
+  'search database',
+);
 const staticPageSlugs = sortedUnique(routes.map((route) => String(route).replace(/^\/skills\//, '').replace(/\/$/, '')), 'static routes');
 
 assertSetEqual(expected, generatedCatalogSlugs, 'repository ↔ generated catalog');
 assertSetEqual(expected, registrySlugs, 'repository ↔ registry');
 assertSetEqual(expected, searchIndexSlugs, 'repository ↔ search index');
+assertSetEqual(expected, searchDatabaseSlugs, 'repository ↔ search database');
 assertSetEqual(expected, staticPageSlugs, 'repository ↔ static routes');
 
 for (const entry of catalog) {
@@ -53,18 +59,14 @@ for (const entry of catalog) {
   if (!entry.resources || typeof entry.resources !== 'object') throw new Error(`Catalog entry ${entry.slug} has no resources map`);
 }
 
-for (const [key, value] of Object.entries({
-  repositorySkillSlugs: expected,
-  generatedCatalogSlugs,
-  registrySlugs,
-  searchIndexSlugs,
-  staticPageSlugs,
-})) {
+for (const key of ['repositorySkillSlugs', 'generatedCatalogSlugs', 'registrySlugs', 'searchIndexSlugs', 'staticPageSlugs']) {
+  const value = manifest?.[key];
+  if (!Array.isArray(value)) throw new Error(`manifest.${key} must be an array`);
   assertSetEqual(expected, sortedUnique(value, `manifest.${key}`), `manifest.${key}`);
 }
 
-if (catalog.length !== repositorySkills.length || registry.length !== repositorySkills.length || searchIndex.length !== repositorySkills.length) {
-  throw new Error(`Count mismatch: repository=${repositorySkills.length}, catalog=${catalog.length}, registry=${registry.length}, search=${searchIndex.length}`);
+if (catalog.length !== repositorySkills.length || registry.length !== repositorySkills.length || searchIndex.length !== repositorySkills.length || searchDatabaseSlugs.length !== repositorySkills.length) {
+  throw new Error(`Count mismatch: repository=${repositorySkills.length}, catalog=${catalog.length}, registry=${registry.length}, search=${searchIndex.length}, searchDatabase=${searchDatabaseSlugs.length}`);
 }
 
 console.log(`Skill coverage check passed: ${expected.length}/${expected.length} repository skills in catalog, registry, search, and static routes.`);

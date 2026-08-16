@@ -1,6 +1,7 @@
 import rawSkills from '../generated/skills.json';
 import rawRegistry from '../generated/registry.json';
 import rawSearchIndex from '../generated/search-index.json';
+import rawSearchDatabase from '../generated/search-db.json';
 
 export type ResourceEntry = {
   name: string;
@@ -70,6 +71,7 @@ export const searchIndex = rawSearchIndex as Array<{
   headings: string[];
   markdown: string;
 }>;
+export const searchDatabase = rawSearchDatabase;
 
 export function getSkill(slug: string) {
   return skills.find((skill) => skill.slug === slug);
@@ -78,4 +80,3 @@ export function getSkill(slug: string) {
 export function formatPhase(phase?: string) {
   return phase ? phase.replaceAll('-', ' ') : 'unclassified';
 }
-

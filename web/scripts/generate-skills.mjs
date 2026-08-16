@@ -1,7 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { create, insertMultiple, save } from 'zbsearch';
 import { discoverSkills, webDirectory } from './skill-data.mjs';
+
+const SEARCH_SCHEMA = {
+  id: 'string',
+  title: 'string',
+  description: 'string',
+  displayDescription: 'string',
+  category: 'string',
+  phase: 'string',
+  capabilities: 'string',
+  headings: 'string',
+  content: 'string',
+  url: 'string',
+};
 
 export function buildArtifacts(entries = discoverSkills()) {
   const slugs = entries.map((entry) => entry.slug).sort();
@@ -33,10 +47,12 @@ export function buildArtifacts(entries = discoverSkills()) {
     sourcePath: entry.sourcePath,
     sourceUrl: entry.sourceUrl,
   }));
+  const searchDatabase = buildSearchDatabase(entries);
   return {
     skills: entries,
     registry,
     searchIndex,
+    searchDatabase,
     routes: slugs.map((slug) => `/skills/${slug}/`),
     manifest: {
       repositorySkillSlugs: slugs,
@@ -46,6 +62,29 @@ export function buildArtifacts(entries = discoverSkills()) {
       staticPageSlugs: slugs,
     },
   };
+}
+
+/**
+ * Build the static Fumadocs search payload. Fumadocs' `staticClient` loads a
+ * serialized ZBSearch database (the Orama static-search integration), so the
+ * same records used for the generated search index are searchable in the
+ * browser without a Node server or a remote search service.
+ */
+export function buildSearchDatabase(entries) {
+  const database = create({ schema: SEARCH_SCHEMA });
+  insertMultiple(database, entries.map((entry) => ({
+    id: entry.slug,
+    title: entry.displayName,
+    description: entry.description,
+    displayDescription: entry.displayDescription,
+    category: entry.category,
+    phase: entry.phase ?? '',
+    capabilities: entry.capabilities.join(' '),
+    headings: entry.headings.join(' '),
+    content: entry.body,
+    url: `/skills/${entry.slug}/`,
+  })));
+  return { type: 'simple', ...save(database) };
 }
 
 function writeJson(filePath, value) {
@@ -84,6 +123,7 @@ export function writeArtifacts(artifacts = buildArtifacts()) {
   writeJson(path.join(generatedDirectory, 'catalog.json'), artifacts.skills);
   writeJson(path.join(generatedDirectory, 'registry.json'), artifacts.registry);
   writeJson(path.join(generatedDirectory, 'search-index.json'), artifacts.searchIndex);
+  writeJson(path.join(generatedDirectory, 'search-db.json'), artifacts.searchDatabase);
   writeJson(path.join(generatedDirectory, 'routes.json'), artifacts.routes);
   writeJson(path.join(generatedDirectory, 'manifest.json'), artifacts.manifest);
   fs.writeFileSync(path.join(generatedDirectory, 'sitemap.xml'), buildSitemap(artifacts.skills), 'utf8');

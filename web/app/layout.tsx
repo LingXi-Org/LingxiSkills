@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SiteFooter } from '../components/SiteFooter';
 import { SiteHeader } from '../components/SiteHeader';
+import { RootProvider } from 'fumadocs-ui/provider/next';
 import './global.css';
 
 export const metadata: Metadata = {
@@ -25,11 +26,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
-        <SiteHeader />
-        <main>{children}</main>
-        <SiteFooter />
+        <RootProvider search={{ options: { type: 'static', api: '/api/search' } }}>
+          <SiteHeader />
+          <main>{children}</main>
+          <SiteFooter />
+        </RootProvider>
       </body>
     </html>
   );
 }
-

@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { DocsBody, DocsPage } from 'fumadocs-ui/layouts/docs/page';
 import { renderMarkdown } from '../../../lib/markdown';
+import { headingSlug } from '../../../lib/markdown';
 import { formatPhase, getSkill, skills } from '../../../lib/skills';
 
 export const dynamicParams = false;
@@ -38,6 +40,13 @@ export default async function SkillDetailPage({ params }: PageProps) {
   const next = index < skills.length - 1 ? skills[index + 1] : undefined;
   const markdownHtml = renderMarkdown(skill.body);
   const resourceSections = Object.entries(skill.resources).filter(([, resources]) => resources.length);
+  const usedHeadingIds = new Map<string, number>();
+  const toc = skill.headings.map((title) => {
+    const base = headingSlug(title);
+    const count = usedHeadingIds.get(base) ?? 0;
+    usedHeadingIds.set(base, count + 1);
+    return { title, url: `#${count ? `${base}-${count + 1}` : base}`, depth: 2 };
+  });
 
   return (
     <div className="detail-shell">
@@ -50,20 +59,24 @@ export default async function SkillDetailPage({ params }: PageProps) {
       </header>
       <div className="detail-layout">
         <article className="detail-content">
-          <div className="markdown-body" dangerouslySetInnerHTML={{ __html: markdownHtml }} />
-          {resourceSections.map(([kind, resources]) => (
-            <section className="resource-section" key={kind}>
-              <p className="eyebrow">Repository resources</p>
-              <h2>{kind[0].toUpperCase() + kind.slice(1)}</h2>
-              <ul className="resource-list">
-                {resources.map((resource) => <li key={resource.path}><a href={resource.sourceUrl} rel="noreferrer">{resource.name || resource.path}</a></li>)}
-              </ul>
-            </section>
-          ))}
-          <nav className="detail-nav" aria-label="Skill navigation">
-            {previous ? <Link href={`/skills/${previous.slug}/`}><small>Previous skill</small>{previous.displayName}</Link> : <span />}
-            {next ? <Link href={`/skills/${next.slug}/`}><small>Next skill</small>{next.displayName}</Link> : <span />}
-          </nav>
+          <DocsPage toc={toc} breadcrumb={{ enabled: false }} footer={{ enabled: false }}>
+            <DocsBody>
+              <div className="markdown-body" dangerouslySetInnerHTML={{ __html: markdownHtml }} />
+              {resourceSections.map(([kind, resources]) => (
+                <section className="resource-section" key={kind}>
+                  <p className="eyebrow">Repository resources</p>
+                  <h2>{kind[0].toUpperCase() + kind.slice(1)}</h2>
+                  <ul className="resource-list">
+                    {resources.map((resource) => <li key={resource.path}><a href={resource.sourceUrl} rel="noreferrer">{resource.name || resource.path}</a></li>)}
+                  </ul>
+                </section>
+              ))}
+              <nav className="detail-nav" aria-label="Skill navigation">
+                {previous ? <Link href={`/skills/${previous.slug}/`}><small>Previous skill</small>{previous.displayName}</Link> : <span />}
+                {next ? <Link href={`/skills/${next.slug}/`}><small>Next skill</small>{next.displayName}</Link> : <span />}
+              </nav>
+            </DocsBody>
+          </DocsPage>
         </article>
         <aside className="spec-panel">
           <h2>Runtime spec</h2>
@@ -86,4 +99,3 @@ export default async function SkillDetailPage({ params }: PageProps) {
     </div>
   );
 }
-

@@ -142,15 +142,69 @@ function titleCaseSlug(slug) {
     .join(' ');
 }
 
-function categoryFor(metadata, slug) {
-  const category = asString(metadata.category);
-  if (!category) {
-    throw new Error(`Skill "${slug}" is missing metadata.category`);
+const CAPABILITY_CATEGORY_PREFIXES = new Map([
+  ['dialog', 'Teaching & Dialogue'],
+  ['teach', 'Teaching & Dialogue'],
+  ['content', 'Content & Visualization'],
+  ['visual', 'Content & Visualization'],
+  ['assess', 'Assessment & Practice'],
+  ['practice', 'Assessment & Practice'],
+  ['grade', 'Assessment & Practice'],
+  ['graph', 'Learner State & Curriculum'],
+  ['model', 'Learner State & Curriculum'],
+  ['profile', 'Learner State & Curriculum'],
+  ['review', 'Learner State & Curriculum'],
+  ['curriculum', 'Learner State & Curriculum'],
+  ['goal', 'Orchestration & Runtime'],
+  ['orchestrator', 'Orchestration & Runtime'],
+  ['plan', 'Orchestration & Runtime'],
+  ['runtime', 'Orchestration & Runtime'],
+  ['meta.report', 'Learner State & Curriculum'],
+  ['meta.evaluate', 'Quality & Utilities'],
+  ['meta.author_skill', 'Quality & Utilities'],
+]);
+
+const PHASE_CATEGORIES = new Map([
+  ['teach', 'Teaching & Dialogue'],
+  ['teaching', 'Teaching & Dialogue'],
+  ['prepare', 'Content & Visualization'],
+  ['authoring', 'Content & Visualization'],
+  ['assess', 'Assessment & Practice'],
+  ['practice', 'Assessment & Practice'],
+  ['learner-model', 'Learner State & Curriculum'],
+  ['report', 'Learner State & Curriculum'],
+  ['runtime', 'Orchestration & Runtime'],
+]);
+
+function categoryFromCapabilities(capabilities) {
+  for (const capability of capabilities) {
+    const normalized = capability.toLowerCase();
+    const prefix = normalized.split('.')[0];
+    const category = CAPABILITY_CATEGORY_PREFIXES.get(normalized) ?? CAPABILITY_CATEGORY_PREFIXES.get(prefix);
+    if (category) return category;
   }
-  if (!SKILL_CATEGORIES.includes(category)) {
-    throw new Error(`Skill "${slug}" has unsupported metadata.category: ${category}`);
-  }
-  return category;
+  return undefined;
+}
+
+/**
+ * Resolve a category without making optional frontmatter a discovery gate.
+ * Explicit taxonomy wins, then the stable capability prefix, then lifecycle
+ * phase/ownership hints, and finally the safe utility bucket from Issue #2.
+ */
+function categoryFor(metadata, capabilities, phase, ownership) {
+  const explicit = asString(metadata.category);
+  if (explicit && SKILL_CATEGORIES.includes(explicit)) return explicit;
+
+  const byCapability = categoryFromCapabilities(capabilities);
+  if (byCapability) return byCapability;
+
+  const byPhase = phase ? PHASE_CATEGORIES.get(phase.toLowerCase()) : undefined;
+  if (byPhase) return byPhase;
+
+  // Shared/runtime components with no recognized capability are operational
+  // utilities by default; dedicated unknowns still fall through safely.
+  if (ownership?.toLowerCase() === 'shared' && phase?.toLowerCase() === 'runtime') return 'Orchestration & Runtime';
+  return 'Quality & Utilities';
 }
 
 function listFiles(directory) {
@@ -226,7 +280,7 @@ export function discoverSkills() {
       description,
       displayDescription,
       version: asString(metadata.version),
-      category: categoryFor(metadata, slug),
+      category: categoryFor(metadata, normalizedCapabilities, phase, ownership),
       phase,
       capabilities: normalizedCapabilities,
       executionMode: asString(metadata['execution-mode'] ?? metadata.executionMode),
