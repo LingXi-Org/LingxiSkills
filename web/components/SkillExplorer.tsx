@@ -77,7 +77,7 @@ export function SkillExplorer({ skills, categories, phases }: { skills: SkillEnt
         && (!filters.criticalPath || skill.criticalPath === true)
         && (!filters.parallelSafe || skill.parallelSafe === true);
     });
-  }, [filters, skills]);
+  }, [filters, indexedSearch.query.data, indexedSearch.query.isLoading, indexedSearch.search, skills]);
 
   const patch = <K extends keyof Filters>(key: K, value: Filters[K]) => setFilters((current) => ({ ...current, [key]: value }));
 
