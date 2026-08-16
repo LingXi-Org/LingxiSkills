@@ -5,6 +5,7 @@ description: >-
   evidence. Use whenever an attempt can be judged by rule; a model opinion is not a grade.
 license: MIT
 metadata:
+  category: "Assessment & Practice"
   author: LingXi-Org
   version: 1.0.0
   display-name: 确定性判分

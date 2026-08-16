@@ -1,0 +1,37 @@
+# LingxiSkills
+
+> A static capability registry generated directly from skills/*/SKILL.md.
+
+## Skills
+
+- [自适应教学](https://skills.lingxilearn.cn/skills/adaptive-pedagogy/): 根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。
+- [产物校验](https://skills.lingxilearn.cn/skills/artifact-validator/): 在产物交付给学习者之前按交付契约校验，模型自称成功不算校验。
+- [个性化课程知识图谱构建](https://skills.lingxilearn.cn/skills/curriculum-graph-builder/): 根据学习上下文和用户已有知识图谱，决定新建或扩充图谱，并生成可持久化的结构化节点、关系与学习状态补丁。
+- [确定性判分](https://skills.lingxilearn.cn/skills/deterministic-grader/): 用课程包的确定性判分器判分并产出证据，能按规则判的就不要交给模型。
+- [学习证据产出](https://skills.lingxilearn.cn/skills/evidence-emitter/): 把对学习者的观察产出为结构化证据，这是 agent 影响学习档案的唯一通道。
+- [形成性评估解释器](https://skills.lingxilearn.cn/skills/formative-assessor/): 将确定性判分证据转为可追溯的学习证据状态和教学策略信号。
+- [目标解析](https://skills.lingxilearn.cn/skills/goal-interpreter/): 把学习者的话解析成目标对象（要什么/关于什么/多急），不决定跑哪个 agent 或流程。
+- [降级回退](https://skills.lingxilearn.cn/skills/graceful-degradation/): 在模型、工具或产物步骤失败时让运行时循环继续，失败必须降级成可用结果而不是卡住。
+- [增量交付](https://skills.lingxilearn.cn/skills/incremental-delivery/): 先交付可用草稿，再继续增强内容。
+- [交互式讲解课件](https://skills.lingxilearn.cn/skills/interactive-lecture-deck/): 构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。
+- [交互式可视化讲解](https://skills.lingxilearn.cn/skills/interactive-visual-explainer/): 为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。
+- [知识点答疑](https://skills.lingxilearn.cn/skills/knowledge-qa/): 基于本任务已产出的材料回答学习者对当前知识点的追问，不泄露未提交的题目答案。
+- [了解你的基础](https://skills.lingxilearn.cn/skills/learner-interview/): 用两三个短问题摸清学习起点。
+- [学习状态反思](https://skills.lingxilearn.cn/skills/learner-state-reflector/): 将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。
+- [学习对话](https://skills.lingxilearn.cn/skills/learning-companion/): 执行期间即时回应学习者消息。
+- [学习报告](https://skills.lingxilearn.cn/skills/learning-report/): 在目标达成时基于档案前后差异和证据账本写报告，每条论断都必须引用真实存在的证据。
+- [课程引入](https://skills.lingxilearn.cn/skills/lesson-intro/): 基于已有课程上下文直接生成自然有趣的课程开场 HTML，不联网搜索或聚合检索结果。
+- [教学协商](https://skills.lingxilearn.cn/skills/negotiation/): 当系统打算偏离用户字面要求时，写出那一句协商话术。可以不照做，但不能不打招呼。
+- [学习计划决策](https://skills.lingxilearn.cn/skills/orchestrator-policy/): 在一个极速模型节点中分别完成学习效用评估与学习计划编排；保留两个可审计技能语义，只谈能力，不谈 agent 名。
+- [执行计划发布](https://skills.lingxilearn.cn/skills/plan-presenter/): 实时更新聊天中的下一步学习计划，不调用模型。
+- [前置依赖分析](https://skills.lingxilearn.cn/skills/prerequisite-analyzer/): 判断目标知识点依赖什么、学习者还差哪一层，决定先讲请求本身还是先补下面那一层。
+- [产品页组件改写](https://skills.lingxilearn.cn/skills/product-page-component-rewriter/): 在 LingxiLearn 项目中开发或改写产品主页及附属介绍页，只复用和改写现有 React/Next.js 组件，完成文案替换、指定组件替换/改写和静态资源替换指导；当用户通过浏览器控制台选中元素、提供页面元素或要求定位某个产品页组件时使用。
+- [学习档案读取](https://skills.lingxilearn.cn/skills/profile-reader/): 把 learning_profile 投影成教学或规划步骤真正需要的紧凑视图，只读不写。
+- [知识点测评生成](https://skills.lingxilearn.cn/skills/quiz-generator/): 基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。
+- [检索练习构建器](https://skills.lingxilearn.cn/skills/retrieval-practice-builder/): 预取基于学习证据的检索、迁移、边界和误区辨析任务。
+- [复习调度](https://skills.lingxilearn.cn/skills/review-scheduler/): 决定哪些知识点该复习、下次复习安排在什么时候，用于和「学新内容」竞争排序。
+- [教学 Skill 评测](https://skills.lingxilearn.cn/skills/skill-eval-harness/): 从组件契约、执行轨迹、教学质量和学习结果四层评测教学 Skill。
+- [能力起草](https://skills.lingxilearn.cn/skills/skill-forge/): 当没有任何已注册能力可以服务目标时起草一个新 skill，草稿始终以禁用状态注册，永不自动启用。
+- [苏格拉底追问](https://skills.lingxilearn.cn/skills/socratic-prober/): 通过一个短问题确认学习者的理解。
+- [结构化输出](https://skills.lingxilearn.cn/skills/structured-output/): 产出并修复严格 JSON 契约输出，用于结果由代码消费而非人阅读的步骤。
+- [工具核查](https://skills.lingxilearn.cn/skills/tool-investigator/): 对真实材料运行课程包注册的确定性工具，把输出变成可引用的证据。

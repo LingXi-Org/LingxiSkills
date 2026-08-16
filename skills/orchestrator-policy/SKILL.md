@@ -6,6 +6,7 @@ description: >-
   fast runtime control node.
 license: MIT
 metadata:
+  category: "Orchestration & Runtime"
   author: LingXi-Org
   version: 1.0.0
   display-name: 学习计划决策

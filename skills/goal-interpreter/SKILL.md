@@ -5,6 +5,7 @@ description: >-
   never decides which agent or workflow runs - that is the orchestrator's job.
 license: MIT
 metadata:
+  category: "Orchestration & Runtime"
   author: LingXi-Org
   version: 1.0.0
   display-name: 目标解析

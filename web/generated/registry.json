@@ -1,0 +1,546 @@
+[
+  {
+    "slug": "adaptive-pedagogy",
+    "name": "adaptive-pedagogy",
+    "displayName": "自适应教学",
+    "displayDescription": "根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。",
+    "description": "Select one evidence-based, low-friction tutoring action from learner evidence and return an immediately useful response with optional state or visual requests.",
+    "category": "Teaching & Dialogue",
+    "phase": "teach",
+    "capabilities": [
+      "teach.strategy",
+      "teach.explain"
+    ],
+    "version": "1.1.0",
+    "criticalPath": true,
+    "learnerFacing": true,
+    "parallelSafe": false,
+    "sourcePath": "skills/adaptive-pedagogy/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/adaptive-pedagogy/SKILL.md"
+  },
+  {
+    "slug": "artifact-validator",
+    "name": "artifact-validator",
+    "displayName": "产物校验",
+    "displayDescription": "在产物交付给学习者之前按交付契约校验，模型自称成功不算校验。",
+    "description": "Validate a generated artifact against its delivery contract before it reaches the learner. Use after any artifact-generating step; a model receipt claiming success is not validation.",
+    "category": "Quality & Utilities",
+    "phase": "shared",
+    "capabilities": [
+      "artifact-validator"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/artifact-validator/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/artifact-validator/SKILL.md"
+  },
+  {
+    "slug": "curriculum-graph-builder",
+    "name": "curriculum-graph-builder",
+    "displayName": "个性化课程知识图谱构建",
+    "displayDescription": "根据学习上下文和用户已有知识图谱，决定新建或扩充图谱，并生成可持久化的结构化节点、关系与学习状态补丁。",
+    "description": "Build or incrementally extend a learner-specific curriculum knowledge graph from structured learning context while preserving stable node IDs, explicit relation direction, curricular importance, optional hierarchy/layout hints, and learner-state overlays. Decide whether to create a new graph or extend an existing graph, and return a deterministic graph patch for the host system to validate and persist.",
+    "category": "Learner State & Curriculum",
+    "phase": "authoring",
+    "capabilities": [
+      "graph.build"
+    ],
+    "version": "1.1.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/curriculum-graph-builder/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/curriculum-graph-builder/SKILL.md"
+  },
+  {
+    "slug": "deterministic-grader",
+    "name": "deterministic-grader",
+    "displayName": "确定性判分",
+    "displayDescription": "用课程包的确定性判分器判分并产出证据，能按规则判的就不要交给模型。",
+    "description": "Grade a learner attempt with the course pack's deterministic graders and emit the resulting evidence. Use whenever an attempt can be judged by rule; a model opinion is not a grade.",
+    "category": "Assessment & Practice",
+    "phase": "assess",
+    "capabilities": [
+      "assess.grade"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "learnerFacing": false,
+    "parallelSafe": false,
+    "sourcePath": "skills/deterministic-grader/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/deterministic-grader/SKILL.md"
+  },
+  {
+    "slug": "evidence-emitter",
+    "name": "evidence-emitter",
+    "displayName": "学习证据产出",
+    "displayDescription": "把对学习者的观察产出为结构化证据，这是 agent 影响学习档案的唯一通道。",
+    "description": "Emit structured learning evidence instead of prose claims about a learner. Use whenever an agent observes something about how the learner is doing; this is the only channel through which an agent may influence the learning profile.",
+    "category": "Quality & Utilities",
+    "phase": "shared",
+    "capabilities": [
+      "evidence-emitter"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/evidence-emitter/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/evidence-emitter/SKILL.md"
+  },
+  {
+    "slug": "formative-assessor",
+    "name": "formative-assessor",
+    "displayName": "形成性评估解释器",
+    "displayDescription": "将确定性判分证据转为可追溯的学习证据状态和教学策略信号。",
+    "description": "Convert deterministic grader, rubric, tool, and explicit learner signals into a structured formative-assessment interpretation for adaptive teaching. Use after a learner attempt when the host needs evidence state, error pattern, verification status, or a policy signal; do not use it to guess learner psychology or write a student-facing response.",
+    "category": "Assessment & Practice",
+    "phase": "assess",
+    "capabilities": [
+      "assess.interpret"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "learnerFacing": false,
+    "parallelSafe": false,
+    "sourcePath": "skills/formative-assessor/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/formative-assessor/SKILL.md"
+  },
+  {
+    "slug": "goal-interpreter",
+    "name": "goal-interpreter",
+    "displayName": "目标解析",
+    "displayDescription": "把学习者的话解析成目标对象（要什么/关于什么/多急），不决定跑哪个 agent 或流程。",
+    "description": "Turn a learner utterance into a goal object: what they want, about what, and how urgently. It never decides which agent or workflow runs - that is the orchestrator's job.",
+    "category": "Orchestration & Runtime",
+    "phase": "runtime",
+    "capabilities": [
+      "goal-interpreter"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/goal-interpreter/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/goal-interpreter/SKILL.md"
+  },
+  {
+    "slug": "graceful-degradation",
+    "name": "graceful-degradation",
+    "displayName": "降级回退",
+    "displayDescription": "在模型、工具或产物步骤失败时让运行时循环继续，失败必须降级成可用结果而不是卡住。",
+    "description": "Keep the runtime loop moving when a model, tool, or artifact step fails. Use on any failure path; a failed step must degrade to a usable result, never stall the loop.",
+    "category": "Orchestration & Runtime",
+    "phase": "shared",
+    "capabilities": [
+      "graceful-degradation"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/graceful-degradation/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/graceful-degradation/SKILL.md"
+  },
+  {
+    "slug": "incremental-delivery",
+    "name": "incremental-delivery",
+    "displayName": "增量交付",
+    "displayDescription": "先交付可用草稿，再继续增强内容。",
+    "description": "让内容生成优先交付最小可用结果，再逐步增强。",
+    "category": "Orchestration & Runtime",
+    "phase": "shared",
+    "capabilities": [
+      "incremental-delivery"
+    ],
+    "version": "1.0.0",
+    "sourcePath": "skills/incremental-delivery/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/incremental-delivery/SKILL.md"
+  },
+  {
+    "slug": "interactive-lecture-deck",
+    "name": "interactive-lecture-deck",
+    "displayName": "交互式讲解课件",
+    "displayDescription": "构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。",
+    "description": "Build a fixed-size, self-contained HTML lecture deck with visual slides, structured explanations, zoom data, and offline delivery.",
+    "category": "Content & Visualization",
+    "phase": "prepare",
+    "capabilities": [
+      "content.deck"
+    ],
+    "version": "1.4.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/interactive-lecture-deck/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/interactive-lecture-deck/SKILL.md"
+  },
+  {
+    "slug": "interactive-visual-explainer",
+    "name": "interactive-visual-explainer",
+    "displayName": "交互式可视化讲解",
+    "displayDescription": "为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。",
+    "description": "Create a self-contained, offline interactive HTML explainer for concepts that are easier to understand through visual manipulation.",
+    "category": "Content & Visualization",
+    "phase": "teach",
+    "capabilities": [
+      "content.visual"
+    ],
+    "version": "1.3.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/interactive-visual-explainer/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/interactive-visual-explainer/SKILL.md"
+  },
+  {
+    "slug": "knowledge-qa",
+    "name": "knowledge-qa",
+    "displayName": "知识点答疑",
+    "displayDescription": "基于本任务已产出的材料回答学习者对当前知识点的追问，不泄露未提交的题目答案。",
+    "description": "Answer a learner's follow-up question about the current knowledge point using the material already produced in this task. Use for direct questions; do not use it to run a teaching strategy or to reveal unanswered quiz answers.",
+    "category": "Teaching & Dialogue",
+    "phase": "teach",
+    "capabilities": [
+      "dialog.answer"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "learnerFacing": true,
+    "parallelSafe": false,
+    "sourcePath": "skills/knowledge-qa/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/knowledge-qa/SKILL.md"
+  },
+  {
+    "slug": "learner-interview",
+    "name": "learner-interview",
+    "displayName": "了解你的基础",
+    "displayDescription": "用两三个短问题摸清学习起点。",
+    "description": "用少量问题了解学习者对目标知识点的起点，并产出结构化自我报告证据。",
+    "category": "Teaching & Dialogue",
+    "phase": "teaching",
+    "capabilities": [
+      "dialog.interview"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "learnerFacing": true,
+    "parallelSafe": false,
+    "sourcePath": "skills/learner-interview/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/learner-interview/SKILL.md"
+  },
+  {
+    "slug": "learner-state-reflector",
+    "name": "learner-state-reflector",
+    "displayName": "学习状态反思",
+    "displayDescription": "将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。",
+    "description": "Compress recent learning events into cautious, traceable learner-state update proposals without interrupting instruction.",
+    "category": "Learner State & Curriculum",
+    "phase": "learner-model",
+    "capabilities": [
+      "model.reflect"
+    ],
+    "version": "1.1.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/learner-state-reflector/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/learner-state-reflector/SKILL.md"
+  },
+  {
+    "slug": "learning-companion",
+    "name": "learning-companion",
+    "displayName": "学习对话",
+    "displayDescription": "执行期间即时回应学习者消息。",
+    "description": "在学习任务执行期间快速回应学习者的消息，并把有效反馈留给下一轮编排。",
+    "category": "Teaching & Dialogue",
+    "phase": "teaching",
+    "capabilities": [
+      "dialog.converse"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "parallelSafe": true,
+    "sourcePath": "skills/learning-companion/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/learning-companion/SKILL.md"
+  },
+  {
+    "slug": "learning-report",
+    "name": "learning-report",
+    "displayName": "学习报告",
+    "displayDescription": "在目标达成时基于档案前后差异和证据账本写报告，每条论断都必须引用真实存在的证据。",
+    "description": "Write the end-of-goal report from the profile diff and the evidence ledger. Use when a goal is satisfied; every claim must cite evidence that exists.",
+    "category": "Learner State & Curriculum",
+    "phase": "report",
+    "capabilities": [
+      "meta.report"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": true,
+    "parallelSafe": true,
+    "sourcePath": "skills/learning-report/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/learning-report/SKILL.md"
+  },
+  {
+    "slug": "lesson-intro",
+    "name": "lesson-intro",
+    "displayName": "课程引入",
+    "displayDescription": "基于已有课程上下文直接生成自然有趣的课程开场 HTML，不联网搜索或聚合检索结果。",
+    "description": "Directly create a warm, self-contained Chinese HTML lesson opening from the supplied topic and curriculum context. Use when a learner needs a compact scene, puzzle, misconception, or question that makes a target concept worth learning; do not browse the web or aggregate search results.",
+    "category": "Content & Visualization",
+    "phase": "prepare",
+    "capabilities": [
+      "content.lesson_intro"
+    ],
+    "version": "4.2.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/lesson-intro/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/lesson-intro/SKILL.md"
+  },
+  {
+    "slug": "negotiation",
+    "name": "negotiation",
+    "displayName": "教学协商",
+    "displayDescription": "当系统打算偏离用户字面要求时，写出那一句协商话术。可以不照做，但不能不打招呼。",
+    "description": "Write the one-sentence negotiation a learner sees when the system intends to do something other than what they literally asked for. Use whenever the ranked plan deviates from the stated request; the system may deviate, but never silently.",
+    "category": "Teaching & Dialogue",
+    "phase": "teach",
+    "capabilities": [
+      "dialog.negotiate"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "learnerFacing": true,
+    "parallelSafe": true,
+    "sourcePath": "skills/negotiation/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/negotiation/SKILL.md"
+  },
+  {
+    "slug": "orchestrator-policy",
+    "name": "orchestrator-policy",
+    "displayName": "学习计划决策",
+    "displayDescription": "在一个极速模型节点中分别完成学习效用评估与学习计划编排；保留两个可审计技能语义，只谈能力，不谈 agent 名。",
+    "description": "Evaluate learning utility and choose the next actions in one model decision. The contract keeps utility evaluation and plan orchestration as two separately auditable skills while exposing one fast runtime control node.",
+    "category": "Orchestration & Runtime",
+    "phase": "runtime",
+    "capabilities": [
+      "orchestrator-policy"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/orchestrator-policy/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/orchestrator-policy/SKILL.md"
+  },
+  {
+    "slug": "plan-presenter",
+    "name": "plan-presenter",
+    "displayName": "执行计划发布",
+    "displayDescription": "实时更新聊天中的下一步学习计划，不调用模型。",
+    "description": "将已验证的 Runtime 编排计划即时投影为学习者可见的执行计划列表。",
+    "category": "Orchestration & Runtime",
+    "phase": "runtime",
+    "capabilities": [
+      "plan.present"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": true,
+    "parallelSafe": true,
+    "sourcePath": "skills/plan-presenter/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/plan-presenter/SKILL.md"
+  },
+  {
+    "slug": "prerequisite-analyzer",
+    "name": "prerequisite-analyzer",
+    "displayName": "前置依赖分析",
+    "displayDescription": "判断目标知识点依赖什么、学习者还差哪一层，决定先讲请求本身还是先补下面那一层。",
+    "description": "Determine what a target knowledge point rests on and which of those prerequisites the learner has not met yet. Use before teaching anything non-trivial; the result decides whether the runtime teaches the request or the thing under it.",
+    "category": "Learner State & Curriculum",
+    "phase": "learner-model",
+    "capabilities": [
+      "graph.prerequisite"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/prerequisite-analyzer/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/prerequisite-analyzer/SKILL.md"
+  },
+  {
+    "slug": "product-page-component-rewriter",
+    "name": "product-page-component-rewriter",
+    "displayName": "产品页组件改写",
+    "displayDescription": "在 LingxiLearn 项目中开发或改写产品主页及附属介绍页，只复用和改写现有 React/Next.js 组件，完成文案替换、指定组件替换/改写和静态资源替换指导；当用户通过浏览器控制台选中元素、提供页面元素或要求定位某个产品页组件时使用。",
+    "description": "在 LingxiLearn 项目中开发或改写产品主页及附属介绍页，只复用和改写现有 React/Next.js 组件，完成文案替换、指定组件替换/改写和静态资源替换指导；当用户通过浏览器控制台选中元素、提供页面元素或要求定位某个产品页组件时使用。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "product-page-component-rewriter"
+    ],
+    "sourcePath": "skills/product-page-component-rewriter/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/product-page-component-rewriter/SKILL.md"
+  },
+  {
+    "slug": "profile-reader",
+    "name": "profile-reader",
+    "displayName": "学习档案读取",
+    "displayDescription": "把 learning_profile 投影成教学或规划步骤真正需要的紧凑视图，只读不写。",
+    "description": "Read a learner's learning_profile rows and project them into the compact view a teaching or planning step actually needs. Use before any decision that depends on what the learner already knows; never use it to write the profile.",
+    "category": "Learner State & Curriculum",
+    "phase": "shared",
+    "capabilities": [
+      "profile-reader"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/profile-reader/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/profile-reader/SKILL.md"
+  },
+  {
+    "slug": "quiz-generator",
+    "name": "quiz-generator",
+    "displayName": "知识点测评生成",
+    "displayDescription": "基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。",
+    "description": "Generate a compact, evidence-grounded formative quiz from taught lesson content to assess understanding and reveal misconceptions.",
+    "category": "Assessment & Practice",
+    "phase": "assess",
+    "capabilities": [
+      "assess.generate"
+    ],
+    "version": "1.1.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/quiz-generator/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/quiz-generator/SKILL.md"
+  },
+  {
+    "slug": "retrieval-practice-builder",
+    "name": "retrieval-practice-builder",
+    "displayName": "检索练习构建器",
+    "displayDescription": "预取基于学习证据的检索、迁移、边界和误区辨析任务。",
+    "description": "Build and prefetch one evidence-grounded retrieval, transfer, boundary-case, or misconception- discriminator task from taught content and learner evidence. Use after a concept checkpoint or while the learner is answering another task; discard the cache when the topic or evidence changes. Do not use it as a blocking tutor or as a replacement for deterministic grading.",
+    "category": "Assessment & Practice",
+    "phase": "assess",
+    "capabilities": [
+      "assess.generate"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/retrieval-practice-builder/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/retrieval-practice-builder/SKILL.md"
+  },
+  {
+    "slug": "review-scheduler",
+    "name": "review-scheduler",
+    "displayName": "复习调度",
+    "displayDescription": "决定哪些知识点该复习、下次复习安排在什么时候，用于和「学新内容」竞争排序。",
+    "description": "Decide which knowledge points are due for retrieval practice and when the next review should fall. Use to rank revisiting known material against teaching new material.",
+    "category": "Learner State & Curriculum",
+    "phase": "learner-model",
+    "capabilities": [
+      "review.schedule"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/review-scheduler/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/review-scheduler/SKILL.md"
+  },
+  {
+    "slug": "skill-eval-harness",
+    "name": "skill-eval-harness",
+    "displayName": "教学 Skill 评测",
+    "displayDescription": "从组件契约、执行轨迹、教学质量和学习结果四层评测教学 Skill。",
+    "description": "Evaluate Lingxi teaching Skills and their run artifacts across component contracts, execution trajectories, pedagogical safety/quality, and learner outcomes. Use when a Skill is added or revised, when a regression suite must be run, or when raw task/result/trace/outcome JSON needs a deterministic report; do not use it in the learner's runtime path.",
+    "category": "Quality & Utilities",
+    "phase": "development",
+    "capabilities": [
+      "meta.evaluate"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/skill-eval-harness/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/skill-eval-harness/SKILL.md"
+  },
+  {
+    "slug": "skill-forge",
+    "name": "skill-forge",
+    "displayName": "能力起草",
+    "displayDescription": "当没有任何已注册能力可以服务目标时起草一个新 skill，草稿始终以禁用状态注册，永不自动启用。",
+    "description": "Draft a new skill manifest when the orchestrator finds no registered capability that can serve the goal. The draft is always registered disabled and never auto-enabled.",
+    "category": "Quality & Utilities",
+    "phase": "development",
+    "capabilities": [
+      "meta.author_skill"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/skill-forge/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/skill-forge/SKILL.md"
+  },
+  {
+    "slug": "socratic-prober",
+    "name": "socratic-prober",
+    "displayName": "苏格拉底追问",
+    "displayDescription": "通过一个短问题确认学习者的理解。",
+    "description": "在掌握度不确定或存在误区时向学习者确认理解。",
+    "category": "Teaching & Dialogue",
+    "phase": "teaching",
+    "capabilities": [
+      "dialog.probe"
+    ],
+    "version": "1.0.0",
+    "criticalPath": true,
+    "parallelSafe": false,
+    "sourcePath": "skills/socratic-prober/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/socratic-prober/SKILL.md"
+  },
+  {
+    "slug": "structured-output",
+    "name": "structured-output",
+    "displayName": "结构化输出",
+    "displayDescription": "产出并修复严格 JSON 契约输出，用于结果由代码消费而非人阅读的步骤。",
+    "description": "Produce and repair strict JSON contract output from a model turn. Use whenever a step's result is consumed by code rather than read by a human.",
+    "category": "Quality & Utilities",
+    "phase": "shared",
+    "capabilities": [
+      "structured-output"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/structured-output/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/structured-output/SKILL.md"
+  },
+  {
+    "slug": "tool-investigator",
+    "name": "tool-investigator",
+    "displayName": "工具核查",
+    "displayDescription": "对真实材料运行课程包注册的确定性工具，把输出变成可引用的证据。",
+    "description": "Run the course pack's registered deterministic tools over real artifacts and turn the output into citable evidence. Use when a claim can be checked instead of asserted.",
+    "category": "Quality & Utilities",
+    "phase": "investigate",
+    "capabilities": [
+      "tool.investigate"
+    ],
+    "version": "1.0.0",
+    "criticalPath": false,
+    "learnerFacing": false,
+    "parallelSafe": true,
+    "sourcePath": "skills/tool-investigator/SKILL.md",
+    "sourceUrl": "https://github.com/LingXi-Org/LingxiSkills/blob/main/skills/tool-investigator/SKILL.md"
+  }
+]

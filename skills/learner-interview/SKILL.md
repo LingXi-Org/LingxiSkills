@@ -3,6 +3,7 @@ name: learner-interview
 description: >-
   用少量问题了解学习者对目标知识点的起点，并产出结构化自我报告证据。
 metadata:
+  category: "Teaching & Dialogue"
   version: 1.0.0
   display-name: 了解你的基础
   display-description: 用两三个短问题摸清学习起点。

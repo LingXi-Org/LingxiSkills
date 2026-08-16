@@ -5,6 +5,7 @@ description: >-
   into citable evidence. Use when a claim can be checked instead of asserted.
 license: MIT
 metadata:
+  category: "Quality & Utilities"
   author: LingXi-Org
   version: 1.0.0
   display-name: 工具核查

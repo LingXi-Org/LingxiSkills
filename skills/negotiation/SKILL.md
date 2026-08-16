@@ -6,6 +6,7 @@ description: >-
   request; the system may deviate, but never silently.
 license: MIT
 metadata:
+  category: "Teaching & Dialogue"
   author: LingXi-Org
   version: 1.0.0
   display-name: 教学协商

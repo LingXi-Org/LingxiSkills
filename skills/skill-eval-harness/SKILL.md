@@ -7,6 +7,7 @@ description: >-
   deterministic report; do not use it in the learner's runtime path.
 license: MIT
 metadata:
+  category: "Quality & Utilities"
   author: LingXi-Org
   version: 1.0.0
   display-name: 教学 Skill 评测

@@ -3,7 +3,18 @@ name: Validate Agent Skills
 on:
   push:
     branches: [main]
+    paths:
+      - 'skills/**'
+      - 'web/**'
+      - '.github/workflows/site.yml'
+      - '.github/workflows/validate.yml'
   pull_request:
+    paths:
+      - 'skills/**'
+      - 'web/**'
+      - '.github/workflows/site.yml'
+      - '.github/workflows/validate.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,3 +39,16 @@ jobs:
             python -m skills_ref.cli validate "$(dirname "$skill_file")"
           done < <(find skills -mindepth 2 -maxdepth 2 -type f -iname 'skill.md' -print0 | sort -z)
           test "$found" -eq 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install site dependencies
+        run: npm ci --prefix web
+      - name: Enforce complete site coverage
+        run: npm run check --prefix web
+      - name: Typecheck site
+        run: npm run typecheck --prefix web
+      - name: Build static site
+        run: npm run build --prefix web

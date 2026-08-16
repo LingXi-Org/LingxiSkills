@@ -3,6 +3,7 @@ name: socratic-prober
 description: >-
   在掌握度不确定或存在误区时向学习者确认理解。
 metadata:
+  category: "Teaching & Dialogue"
   version: 1.0.0
   display-name: 苏格拉底追问
   display-description: 通过一个短问题确认学习者的理解。

@@ -6,6 +6,7 @@ description: >-
   that makes a target concept worth learning; do not browse the web or aggregate search results.
 license: MIT
 metadata:
+  category: "Content & Visualization"
   author: LingXi-Org
   version: 4.2.0
   display-name: 课程引入

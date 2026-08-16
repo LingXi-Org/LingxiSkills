@@ -4,6 +4,7 @@ description: >-
   Select one evidence-based, low-friction tutoring action from learner evidence and return an immediately useful response with optional state or visual requests.
 license: MIT
 metadata:
+  category: "Teaching & Dialogue"
   author: LingXi-Org
   version: 1.1.0
   display-name: 自适应教学

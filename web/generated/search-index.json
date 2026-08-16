@@ -1,0 +1,651 @@
+[
+  {
+    "slug": "adaptive-pedagogy",
+    "name": "adaptive-pedagogy",
+    "displayName": "自适应教学",
+    "description": "Select one evidence-based, low-friction tutoring action from learner evidence and return an immediately useful response with optional state or visual requests.",
+    "displayDescription": "根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。",
+    "category": "Teaching & Dialogue",
+    "capabilities": [
+      "teach.strategy",
+      "teach.explain"
+    ],
+    "phase": "teach",
+    "headings": [
+      "Adaptive Tutor",
+      "Role",
+      "Output language",
+      "Runtime modes",
+      "`preflight`",
+      "`teach`",
+      "Decision policy",
+      "Local interaction and delegation gates",
+      "Required result"
+    ],
+    "markdown": "---\r\nname: adaptive-pedagogy\r\ndescription: >-\r\n  Select one evidence-based, low-friction tutoring action from learner evidence and return an immediately useful response with optional state or visual requests.\r\nlicense: MIT\r\nmetadata:\n  category: \"Teaching & Dialogue\"\n  author: LingXi-Org\n  version: 1.1.0\r\n  display-name: 自适应教学\r\n  display-description: 根据学习证据选择低摩擦教学策略，生成即时辅导回应，并可选地提出状态更新或可视化请求。\r\n  output-language: zh-CN\r\n  output-contract: adaptive-pedagogy-result.v2\r\n  execution-mode: synchronous-with-nonblocking-side-effects\r\n  default-blocking-hop-budget: \"1\"\r\n  phase: teach\r\n  critical-path: true\r\n  learner-facing: true\r\n  state-write-mode: proposal-only\r\n  parallel-safe: false\r\n  latency-class: interactive\r\n  capabilities: teach.strategy, teach.explain\r\n  status-line: 正在选择合适的教学方式…\r\n  provider: adaptive_pedagogy\r\n  ownership: dedicated\r\n  eval-suite: adaptive-pedagogy-v1\r\n---\r\n\r\n# Adaptive Tutor\r\n\r\n## Role\r\n\r\nAct as the single synchronous personalized-teaching policy after the preparation phase. The\r\nSupervisor may call this Skill as a manager-as-tools capability, but this Skill owns the only\r\nlearner-facing teaching response for the turn. Consume deterministic judge evidence directly when it\r\nis clear; consume `formative-assessor`'s structured signal only when evidence is ambiguous. Choose\r\nthe smallest interaction that produces useful learning and useful evidence. Do not maximize Socratic\r\nturns, run a diagnostic interview, or hand off the learner to another teaching writer.\r\n\r\n## Output language\r\n\r\nWrite every learner-facing field and every prose value in Simplified Chinese. Preserve protocol\r\nkeys, strategy identifiers, file names, formulas, code, URLs, and schema tokens in their original\r\nform. The default output contract is `adaptive-pedagogy-result.v2`.\r\n\r\n## Runtime modes\r\n\r\n### `preflight`\r\n\r\nRun independently while the preparation artifacts are being produced or viewed. It may run in\r\nparallel with `lesson-intro` and `interactive-lecture-deck`; never wait for either artifact and never\r\nmake this cache a prerequisite for starting the lesson. Do not require a student reply or update mastery.\r\nPrepare one high-information post-lecture probe, one to three misconception patterns tied to the\r\ntaught content, a cheap Chinese fallback for each branch, and optional `interactive-visual-explainer` briefs\r\nonly when a visual materially improves reasoning. Return cacheable material.\r\n\r\n### `teach`\r\n\r\nRun after a learner message or answer. Return one immediate Chinese student-facing response and\r\noptional non-blocking side effects. If deterministic grading or a `formative-assessor` result is\r\nsupplied, use it as evidence; do not replace it with an unsupported psychological diagnosis. A cached\r\n`retrieval-practice-builder` task is only a proposal: re-check it against the current event before use.\r\n\r\n## Decision policy\r\n\r\n1. Require at most one mandatory learner action in a response.\r\n2. Ask a question only when its answer can change the next support action.\r\n3. Use learner-provided confidence or same-turn UI chips; never invent confidence from tone.\r\n4. Never require agreement with an inferred learner model.\r\n5. Prefer current learner reasoning, then recent independent attempts, assisted attempts, host\r\n   state, and explicit support choices, in that order.\r\n6. Never infer intelligence, motivation, disability, personality, mental health, or learning style.\r\n7. Keep `learner_facing_writer_count <= 1` for every learner turn; assessor, reflector, and artifact\r\n   Skills return structured data or artifacts, not competing chat messages.\r\n\r\nRead `references/strategy-kernel.md` and choose exactly one primary strategy per response:\r\n\r\n- `retrieve_or_predict`: no usable evidence after a lesson;\r\n- `minimal_cue`: likely slip, fragile retrieval, or low-confidence error;\r\n- `progressive_hint`: the learner wants help but can still do useful work;\r\n- `conceptual_conflict`: a stable, high-confidence incorrect rule needs a compact counterexample;\r\n- `worked_example_fade`: repeated failure or novice status calls for gradually removed support;\r\n- `targeted_explanation`: the learner requests explanation or another question has no value;\r\n- `teach_back`: a natural checkpoint can reveal causal understanding;\r\n- `transfer_check`: an independent application or boundary case is due;\r\n- `learner_model_challenge`: the learner explicitly asks to disagree or prove a claim.\r\n\r\nApply these routing rules:\r\n\r\n- If the learner demonstrates the target relation, acknowledge briefly and advance. Do not repeat\r\n  the same question.\r\n- For a wrong answer with low certainty or a likely slip, use a cue or local hint.\r\n- For a wrong answer with a clear high-confidence rule, use one prediction and one counterexample\r\n  in the same local interaction when possible.\r\n- For repeated failure, add information at each step: cue, hint, micro-example, then concise\r\n  explanation. Never send a bare “try again”.\r\n- If strong help was needed, set `verification_debt` and defer one independent check to a natural\r\n  checkpoint; do not immediately interrogate the learner.\r\n\r\n## Local interaction and delegation gates\r\n\r\nLocal scaffolds may contain zero to three initially hidden Chinese hints. They must be ordered by\r\nreveal level, independently useful, and require no extra model call. Log hint openings as evidence.\r\nSupport choices such as `继续自己试`, `给我一点提示`, `看一个例子`, and `直接讲解` apply only to\r\nthe current moment and are not permanent learner profiles.\r\n\r\nRequest `interactive-visual-explainer` only when manipulation, comparison, geometry, algorithm tracing, or a\r\ncounterexample is itself part of the reasoning. Visual work is a background artifact sidecar: return\r\nuseful Chinese text immediately, set `blocking=false`, and include `fallback_text`. Request a remedial\r\n`interactive-lecture-deck` as a non-blocking artifact only for a substantial missing sub-concept that\r\nneeds structured re-teaching. Never await `learner-state-reflector`, visual generation, quiz generation,\r\nor state persistence before returning the learner response.\r\n\r\n## Required result\r\n\r\nReturn `adaptive-pedagogy-result.v2` with `mode`, `evidence_used`, `decision`,\r\n`student_response`, and `state_update_proposals`. Include `visual_request`,\r\n`background_reflection`, or `prefetch_cache` only when useful. Every learner-facing string,\r\nfallback, label, hint, and explanation must be Chinese. Before returning, check\r\n`references/fast-path-policy.md` and validate the result against\r\n`references/adaptive-pedagogy-result.schema.json` when a validator is available.\r\n\r\nDo not claim that a learner-state inference is a formal diagnosis or teacher judgment.\r\n"
+  },
+  {
+    "slug": "artifact-validator",
+    "name": "artifact-validator",
+    "displayName": "产物校验",
+    "description": "Validate a generated artifact against its delivery contract before it reaches the learner. Use after any artifact-generating step; a model receipt claiming success is not validation.",
+    "displayDescription": "在产物交付给学习者之前按交付契约校验，模型自称成功不算校验。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "artifact-validator"
+    ],
+    "phase": "shared",
+    "headings": [
+      "产物校验",
+      "角色",
+      "各产物的校验点",
+      "`lesson-intro.html`",
+      "`lecture-deck`",
+      "`visual-explainer.html`",
+      "quiz 结果",
+      "失败处理顺序",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: artifact-validator\r\ndescription: >-\r\n  Validate a generated artifact against its delivery contract before it reaches the learner. Use\r\n  after any artifact-generating step; a model receipt claiming success is not validation.\r\nlicense: MIT\r\nmetadata:\n  category: \"Quality & Utilities\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 产物校验\r\n  status-line: 正在校验产物完整性…\r\n  display-description: 在产物交付给学习者之前按交付契约校验，模型自称成功不算校验。\r\n  output-language: zh-CN\r\n  execution-mode: shared-contract\r\n  phase: shared\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  provider: \r\n  ownership: shared\r\n---\r\n\r\n# 产物校验\r\n\r\n## 角色\r\n\r\n生成 agent 会在写完文件之前、之后、甚至没写文件的情况下都返回\"成功\"。**回执不是校验**。\r\n宿主在发布任何学习者可见产物之前必须跑一次确定性校验。\r\n\r\n## 各产物的校验点\r\n\r\n### `lesson-intro.html`\r\n- 单文件、零外部请求、UTF-8、`lang=\"zh-CN\"`。\r\n- 存在 `<title>`、`<main>`、至少一个 `<figure>` 或 `<svg>`。\r\n- 明暗两套配色都定义了（`prefers-color-scheme` 或等价 token）。\r\n- 校验失败时回退到宿主预置的 fallback 页面，**不要交付坏页面**。\r\n\r\n### `lecture-deck`\r\n- `lecture.json` 必须是 v2：每个 anchor 有 `id`/`label`/`rect` 对象（不是数组）；\r\n  每个 step 有 `advance`；overview 的 camera 只能是 `{\"mode\":\"fit\"}`。\r\n- 每页 slide 根节点直接子块 ≤ 8（硬上限 10）。\r\n- 每个 `<text>` 带 `class` 之一：`t`/`ts`/`th`/`tn`。\r\n- `runtime/index.html` 由宿主预置，生成方不得覆盖。\r\n- `dist/lecture.html` 由服务端 standalone build 产出。\r\n\r\n### `visual-explainer.html`\r\n- 单文件、离线、无外部请求；支持明暗与打印。\r\n- 通过 palette 检查与静态检查。\r\n\r\n### quiz 结果\r\n- 符合 `quiz-generation-result.v1`；`total_points` 等于各题 `points` 之和。\r\n- 答案、解析、keywords 属内部字段，**不得进入面向学习者的快照**。\r\n\r\n## 失败处理顺序\r\n\r\n1. 能修就地修（结构性小错，如 rect 写成数组）。\r\n2. 修不了就回退到已知可用版本，并在 `warnings` 里写明中文原因。\r\n3. 两者都不行才让这一步失败，并产出一条 `error_pattern` 证据。\r\n\r\n## 反模式\r\n\r\n- 相信模型的 `{\"status\":\"ok\"}`。\r\n- 把校验失败的产物交付出去，只在日志里记一行 warning。\r\n- 校验失败就整个任务失败——学习者会因此丢掉本来可用的材料。\r\n"
+  },
+  {
+    "slug": "curriculum-graph-builder",
+    "name": "curriculum-graph-builder",
+    "displayName": "个性化课程知识图谱构建",
+    "description": "Build or incrementally extend a learner-specific curriculum knowledge graph from structured learning context while preserving stable node IDs, explicit relation direction, curricular importance, optional hierarchy/layout hints, and learner-state overlays. Decide whether to create a new graph or extend an existing graph, and return a deterministic graph patch for the host system to validate and persist.",
+    "displayDescription": "根据学习上下文和用户已有知识图谱，决定新建或扩充图谱，并生成可持久化的结构化节点、关系与学习状态补丁。",
+    "category": "Learner State & Curriculum",
+    "capabilities": [
+      "graph.build"
+    ],
+    "phase": "authoring",
+    "headings": [
+      "Curriculum Graph Builder",
+      "Role",
+      "Runtime boundary",
+      "Required input",
+      "Decide: create or extend",
+      "Stable identity rules",
+      "Node model",
+      "Edge model and direction",
+      "Incremental patch only",
+      "Learner-state handling",
+      "Layout policy",
+      "Output"
+    ],
+    "markdown": "---\r\nname: curriculum-graph-builder\r\ndescription: >-\r\n  Build or incrementally extend a learner-specific curriculum knowledge graph from structured learning context while preserving stable node IDs, explicit relation direction, curricular importance, optional hierarchy/layout hints, and learner-state overlays. Decide whether to create a new graph or extend an existing graph, and return a deterministic graph patch for the host system to validate and persist.\r\nlicense: MIT\r\nmetadata:\n  category: \"Learner State & Curriculum\"\n  author: LingXi-Org\n  version: 1.1.0\r\n  display-name: 个性化课程知识图谱构建\r\n  display-description: 根据学习上下文和用户已有知识图谱，决定新建或扩充图谱，并生成可持久化的结构化节点、关系与学习状态补丁。\r\n  output-language: zh-CN\r\n  output-contract: curriculum-graph-builder-result.v1\r\n  execution-mode: authoring-structured-generation\r\n  phase: authoring\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: proposal-only\r\n  parallel-safe: true\r\n  latency-class: offline\r\n  capabilities: graph.build\r\n  status-line: 正在整理课程知识结构…\r\n  provider: curriculum_graph\r\n  ownership: dedicated\r\n  eval-suite: curriculum-graph-builder-v1\r\n---\r\n\r\n# Curriculum Graph Builder\r\n\r\n## Role\r\n\r\nBuild a curriculum graph proposal as structured data, not as HTML, SVG, Mermaid, or prose. This is\r\nan authoring-stage capability for Course Packs and trusted lesson materials, not a student-turn\r\nwriter and not a replacement for the frontend graph renderer. A Supervisor may call it as a\r\nmanager-as-tools capability; it must return its bounded result and never hand off to another agent.\r\nThe host system owns persistence, optimistic concurrency, identity, authorization, and final merge.\r\nThis Skill only proposes a safe graph decision and graph patch.\r\n\r\nThe graph has two logically separate layers:\r\n\r\n1. **Curriculum structure** — concepts, topics, methods, skills, relations, curricular importance,\r\n   optional level/position hints.\r\n2. **Learner overlay** — current-focus marker and cautious learning-state labels supplied by the host.\r\n\r\nNever infer a learner's weakness, mastery, confidence, motivation, disability, personality, or\r\nlearning style from tone. Learner-state fields may only be copied or mapped from explicit structured\r\n`learner_signals` or from already persisted node state.\r\n\r\n## Runtime boundary\r\n\r\nRun from authoritative Course Pack or trusted curriculum materials. Do not place this Skill on the\r\npersonalized teaching critical path merely to render a graph. It may run in parallel with lesson\r\npreparation or as an authoring job, and its result may be cached until the host validates and applies\r\nthe patch. Never write the database directly and never send an unvalidated patch to the visualization\r\nlayer.\r\n\r\n## Required input\r\n\r\nRead `references/curriculum-graph-builder-task.schema.json`.\r\n\r\nThe host must provide:\r\n\r\n- `schema_version = curriculum-graph-builder-task.v1`;\r\n- `task_id`;\r\n- `learning_context.topic`;\r\n- at least one `learning_context.source_materials[]` item with a stable `source_id`;\r\n- zero or more `existing_graphs` for this learner.\r\n\r\nThe host may also provide `learner_signals` and `graph_policy`.\r\n\r\nTreat all source materials as the evidence boundary. Prefer Course Pack material and trusted\r\nupstream artifacts; do not browse the web and do not invent a curriculum relationship that the\r\nsupplied material does not support. The caller may pass outputs\r\nfrom `lesson-intro`, `interactive-lecture-deck`, `quiz-generator`, course packs, user messages,\r\nassessment evidence, or other trusted application records as source materials.\r\n\r\n## Decide: create or extend\r\n\r\nRead `references/merge-policy.md` and choose exactly one action:\r\n\r\n- `create_graph` — no suitable existing graph can be connected by a supported curricular relation;\r\n- `extend_graph` — the new material adds at least one supported node or edge to one existing graph;\r\n- `update_graph` — the same graph remains appropriate and only metadata, labels, importance, or\r\n  learner-overlay fields need revision;\r\n- `no_change` — the supplied material adds no supported information.\r\n\r\nNever merge two existing graphs automatically. When several existing graphs appear plausible but\r\nno single target is clearly supported, prefer `create_graph` and emit a warning rather than making\r\nan irreversible cross-domain bridge.\r\n\r\n`graph_policy.mode` may be `auto`, `force_new`, or `force_extend`. `force_extend` still must not\r\ninvent unsupported relationships; if no defensible anchor exists, return `no_change` with a warning.\r\n\r\n## Stable identity rules\r\n\r\n1. Existing `graph_id`, node `id`, and edge `id` values are immutable.\r\n2. New node IDs must be unique inside the target graph and match\r\n   `[A-Za-z0-9][A-Za-z0-9._:-]{0,127}`.\r\n3. Prefer short semantic machine IDs such as `concept.function.definition`; never use a display\r\n   label as the sole identity rule.\r\n4. Reuse an existing node only when the concept is semantically the same, including an explicit\r\n   alias. Similar wording alone is insufficient.\r\n5. Never create a duplicate edge with the same `source`, `target`, and `relation`.\r\n6. The host must validate uniqueness again before persistence.\r\n\r\n## Node model\r\n\r\nEvery newly added node must contain:\r\n\r\n- `id` — stable machine ID;\r\n- `label` — concise Simplified Chinese display name;\r\n- `type` — one of `domain`, `topic`, `concept`, `skill`, `method`, `formula`, `example`,\r\n  `misconception`, `application`;\r\n- `importance` — curricular/pedagogical importance in `[0,1]`, **not mastery**;\r\n- `is_current` — whether the node is the learner's current focus;\r\n- `learning_state` — one of `unknown`, `not_observed`, `emerging`, `demonstrated`,\r\n  `misconception_evidence`, `needs_recheck`.\r\n\r\nOptional fields include `level`, `position`, `aliases`, `description`, and `source_refs`.\r\n\r\nUse `is_current` separately from `learning_state` so a node can be both current and weak. The UI\r\nshould treat `misconception_evidence` and `needs_recheck` as weak/review states. Do not add a second\r\nredundant `is_weak` field.\r\n\r\n`importance` represents curricular centrality and usefulness for future learning. It must not be\r\nraised merely because the learner is weak on the node. Current focus should be rendered separately.\r\n\r\n## Edge model and direction\r\n\r\nEvery edge must include `source`, `target`, `relation`, `relation_label`, and `directed`.\r\nUse the canonical relation taxonomy from `references/graph-model.md`:\r\n\r\n- `prerequisite_of` — source is a prerequisite of target;\r\n- `foundation_for` — source provides a foundation for target but is not a strict prerequisite;\r\n- `part_of` — source is a component/subconcept of target;\r\n- `leads_to` — source naturally leads to target in a learning or reasoning sequence;\r\n- `applies_to` — source is applied to target;\r\n- `contrasts_with` — symmetric conceptual contrast;\r\n- `commonly_confused_with` — symmetric misconception-prone relation;\r\n- `related_to` — weak symmetric relation; use sparingly.\r\n\r\nFor symmetric relations set `directed=false`; otherwise set `directed=true`.\r\nNever use vague `related_to` merely to avoid creating a new graph.\r\n\r\n## Incremental patch only\r\n\r\nDo not rewrite the learner's complete persisted graph on every conversation. Return a patch:\r\n\r\n- `add_nodes`;\r\n- `update_nodes`;\r\n- `add_edges`;\r\n- `update_edges`;\r\n- `learner_overlay_updates`.\r\n\r\nThe host applies the patch against `decision.base_revision` in one transaction and then returns the\r\npersisted full graph snapshot to the frontend. This prevents the model from accidentally dropping\r\nold nodes and keeps token cost bounded as graphs grow.\r\n\r\nDo not delete nodes or edges in v1. Destructive graph editing is intentionally outside this Skill.\r\n\r\n## Learner-state handling\r\n\r\nRead learner status only from `learner_signals` or persisted node fields.\r\n\r\n- `learner_signals.current_concepts` may mark `is_current=true`.\r\n- `learner_signals.concept_states` may update `learning_state` and attach `evidence_ids`.\r\n- If a signal references a concept by label rather than node ID, map it only when the match is\r\n  unambiguous.\r\n- Never convert one correct answer into `demonstrated` unless the host explicitly supplied that\r\n  state.\r\n\r\nThis Skill organizes learner state onto graph nodes; it does not perform knowledge tracing.\r\n\r\n## Layout policy\r\n\r\n`level` and `position` are optional hints.\r\n\r\n- Prefer `level` when prerequisite depth is clear.\r\n- Omit `position` by default and let the frontend force layout solve coordinates.\r\n- Only emit `position` when the caller explicitly supplies or requests fixed coordinates.\r\n- Never fabricate coordinates as if they carried educational meaning.\r\n\r\n## Output\r\n\r\nReturn only `curriculum-graph-builder-result.v1`, validated against\r\n`references/curriculum-graph-builder-result.schema.json` when a validator is available.\r\n\r\nThe result must contain:\r\n\r\n- `decision`;\r\n- `graph_patch`;\r\n- `warnings`;\r\n- `evidence_summary`.\r\n\r\nWrite all learner-facing labels, descriptions, reasons, and warnings in Simplified Chinese. Keep\r\nmachine IDs, enum values, schema keys, and relation identifiers in their technical form.\r\n\r\nBefore returning, apply `references/quality-gate.md`.\r\n\r\nThe result is a host-facing patch proposal, not a learner-facing explanation. Keep\r\n`learner_facing_writer_count <= 1` at the system level; this Skill contributes zero learner-facing\r\nwriters.\r\n"
+  },
+  {
+    "slug": "deterministic-grader",
+    "name": "deterministic-grader",
+    "displayName": "确定性判分",
+    "description": "Grade a learner attempt with the course pack's deterministic graders and emit the resulting evidence. Use whenever an attempt can be judged by rule; a model opinion is not a grade.",
+    "displayDescription": "用课程包的确定性判分器判分并产出证据，能按规则判的就不要交给模型。",
+    "category": "Assessment & Practice",
+    "capabilities": [
+      "assess.grade"
+    ],
+    "phase": "assess",
+    "headings": [
+      "确定性判分",
+      "角色",
+      "判分器类型",
+      "规则",
+      "输出契约 `grading-result.v1`",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: deterministic-grader\r\ndescription: >-\r\n  Grade a learner attempt with the course pack's deterministic graders and emit the resulting\r\n  evidence. Use whenever an attempt can be judged by rule; a model opinion is not a grade.\r\nlicense: MIT\r\nmetadata:\n  category: \"Assessment & Practice\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 确定性判分\r\n  display-description: 用课程包的确定性判分器判分并产出证据，能按规则判的就不要交给模型。\r\n  output-language: zh-CN\r\n  output-contract: grading-result.v1\r\n  execution-mode: deterministic-evaluation\r\n  phase: assess\r\n  critical-path: true\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: false\r\n  latency-class: interactive\r\n  capabilities: assess.grade\r\n  status-line: 正在核对你的作答…\r\n  provider: deterministic_grader\r\n  ownership: dedicated\r\n---\r\n\r\n# 确定性判分\r\n\r\n## 角色\r\n\r\n掌握度是系统对学习者的正式判断，它必须建立在可复现的判分上。模型可以解释判分结果，\r\n**不能代替判分**。宿主的 `kernel/graders.py` 是权威实现，这里描述它的使用契约。\r\n\r\n## 判分器类型\r\n\r\n| grader | 适用 | 判定 |\r\n| --- | --- | --- |\r\n| `exact` | 单选、精确值 | 归一化后完全相等 |\r\n| `numeric` | 数值题 | 落在 `tolerance` 内 |\r\n| `set` | 多选 | 集合相等，可配 `partial_credit` |\r\n| `keywords` | 简答 | 命中必需关键词集合的比例 |\r\n| `tool` | 需要工具核查的题 | 与工具输出比对 |\r\n\r\n## 规则\r\n\r\n1. **先判分，再解释**。顺序反过来会让解释影响分数。\r\n2. **分数是观测值**。判分器给 0.4 就产出 0.4 的证据，不要因为「他思路对」改成 0.7；\r\n   思路对属于另一条 `error_pattern` 证据。\r\n3. **误区标签取自课程包的 `misconception` 分类**，不要每次新造措辞——\r\n   `learning_profile.misconceptions` 按标签聚合，措辞漂移会让同一个误区看起来像五个。\r\n4. **答不出也是证据**：产出 `no_answer`，`score=0.0`，不要跳过。跳过会让\r\n   `evidence_count` 停滞，掌握度估计永远处于「不可信」。\r\n5. **提示层级必须随分数一起产出**。H3 提示下答对的信息量远低于 H0，\r\n   掌握度按 `kernel/mastery.py::hint_discount` 打折。\r\n6. 判分器不可用或题目没有判分规则 → 走 `graceful-degradation`：保留作答证据，\r\n   标 `needs_recheck`，**不要猜分数**。\r\n\r\n## 输出契约 `grading-result.v1`\r\n\r\n```json\r\n{\r\n  \"per_item\": [\r\n    {\"item_id\": \"q3\", \"knowledge_point\": \"tcp-congestion\", \"score\": 0.0,\r\n     \"correct\": false, \"hint_level\": 2,\r\n     \"misconceptions\": [\"把拥塞窗口当成接收窗口\"],\r\n     \"detail\": \"答案写成 rwnd 决定发送速率\"}\r\n  ],\r\n  \"overall\": 0.33,\r\n  \"needs_recheck\": [],\r\n  \"evidence\": [{\"signal\": \"incorrect\", \"knowledge_point\": \"tcp-congestion\",\r\n                \"score\": 0.0, \"hint_level\": 2}]\r\n}\r\n```\r\n\r\n## 反模式\r\n\r\n- 让模型「综合评估」一道有明确答案的题。\r\n- 把部分分给成「鼓励分」。\r\n- 判分结果不产出证据，只写进回复文本——那样档案永远不动。\r\n"
+  },
+  {
+    "slug": "evidence-emitter",
+    "name": "evidence-emitter",
+    "displayName": "学习证据产出",
+    "description": "Emit structured learning evidence instead of prose claims about a learner. Use whenever an agent observes something about how the learner is doing; this is the only channel through which an agent may influence the learning profile.",
+    "displayDescription": "把对学习者的观察产出为结构化证据，这是 agent 影响学习档案的唯一通道。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "evidence-emitter"
+    ],
+    "phase": "shared",
+    "headings": [
+      "学习证据产出",
+      "角色",
+      "证据信号",
+      "规则",
+      "最小示例",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: evidence-emitter\r\ndescription: >-\r\n  Emit structured learning evidence instead of prose claims about a learner. Use whenever an agent\r\n  observes something about how the learner is doing; this is the only channel through which an\r\n  agent may influence the learning profile.\r\nlicense: MIT\r\nmetadata:\n  category: \"Quality & Utilities\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 学习证据产出\r\n  status-line: 正在整理学习证据…\r\n  display-description: 把对学习者的观察产出为结构化证据，这是 agent 影响学习档案的唯一通道。\r\n  output-language: zh-CN\r\n  execution-mode: shared-contract\r\n  phase: shared\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  provider: \r\n  ownership: shared\r\n---\r\n\r\n# 学习证据产出\r\n\r\n## 角色\r\n\r\nagent 不能写档案，只能产出证据。`state_updater` 是唯一的消费者，它把证据折叠进\r\n`learning_profile`。所以\"我觉得他掌握了\"没有任何作用；**只有证据行会改变系统状态**。\r\n\r\n## 证据信号\r\n\r\n| signal | 含义 | 是否必须带 score |\r\n| --- | --- | --- |\r\n| `correct` | 作答正确 | 是 |\r\n| `incorrect` | 作答错误 | 是 |\r\n| `no_answer` | 答不出、跳过、放弃 | 是（通常 0.0） |\r\n| `self_report` | 学习者自述（\"这块我不懂\"） | 否 |\r\n| `dwell_time` | 在某材料上的停留时长 | 否 |\r\n| `error_pattern` | 识别出的错误模式 | 否 |\r\n| `artifact_viewed` | 打开/看完了某个产物 | 否 |\r\n| `hint_used` | 使用了第 N 级提示 | 否 |\r\n\r\n## 规则\r\n\r\n1. **一条证据只说一个知识点**。\"他 TCP 和 UDP 都不熟\"要拆成两行。\r\n2. **`score` 是观测值，不是评价**。判分器给 0.4 就写 0.4，不要\"感觉他其实会，给 0.7\"。\r\n3. **`hint_level` 必须如实填**。掌握度按提示层级打折（H0 全额、H3 五折）；瞒报提示层级会\r\n   直接制造虚高的掌握度。\r\n4. **自述不是作答**。`self_report` 不带分数，它影响 `my_questions` 和复习优先级，不直接抬掌握度。\r\n5. **误区要给稳定标签**，不要每次换一种说法；`misconceptions` 是按标签聚合的。\r\n6. 证据只追加，不修改。写错了就再写一条更正的观测，不要试图改旧行。\r\n\r\n## 最小示例\r\n\r\n```json\r\n{\"knowledge_point\": \"tcp-congestion\", \"signal\": \"incorrect\", \"score\": 0.0,\r\n \"source_agent\": \"deterministic_grader\", \"hint_level\": 2,\r\n \"misconceptions\": [\"把拥塞窗口当成接收窗口\"],\r\n \"summary\": \"在 q3 把 cwnd 与 rwnd 混用\"}\r\n```\r\n\r\n## 反模式\r\n\r\n- 产出一段自然语言让下一个 agent 去解析。\r\n- 一条证据同时覆盖多个知识点。\r\n- 因为\"想让学习者有成就感\"而抬高 score。\r\n"
+  },
+  {
+    "slug": "formative-assessor",
+    "name": "formative-assessor",
+    "displayName": "形成性评估解释器",
+    "description": "Convert deterministic grader, rubric, tool, and explicit learner signals into a structured formative-assessment interpretation for adaptive teaching. Use after a learner attempt when the host needs evidence state, error pattern, verification status, or a policy signal; do not use it to guess learner psychology or write a student-facing response.",
+    "displayDescription": "将确定性判分证据转为可追溯的学习证据状态和教学策略信号。",
+    "category": "Assessment & Practice",
+    "capabilities": [
+      "assess.interpret"
+    ],
+    "phase": "assess",
+    "headings": [
+      "Formative Assessor",
+      "Role",
+      "Evidence boundary",
+      "Interpretation workflow",
+      "Routing defaults",
+      "Runtime boundary",
+      "Validation"
+    ],
+    "markdown": "---\r\nname: formative-assessor\r\ndescription: >-\r\n  Convert deterministic grader, rubric, tool, and explicit learner signals into a structured\r\n  formative-assessment interpretation for adaptive teaching. Use after a learner attempt when the\r\n  host needs evidence state, error pattern, verification status, or a policy signal; do not use it\r\n  to guess learner psychology or write a student-facing response.\r\nlicense: MIT\r\nmetadata:\n  category: \"Assessment & Practice\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 形成性评估解释器\r\n  display-description: 将确定性判分证据转为可追溯的学习证据状态和教学策略信号。\r\n  output-language: zh-CN\r\n  output-contract: formative-assessor-result.v1\r\n  execution-mode: synchronous-structured-generation\r\n  phase: assess\r\n  critical-path: true\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: false\r\n  latency-class: interactive\r\n  capabilities: assess.interpret\r\n  status-line: 正在分析你的作答证据…\r\n  provider: formative_assessor\r\n  ownership: dedicated\r\n  eval-suite: formative-assessor-v1\r\n---\r\n\r\n# Formative Assessor\r\n\r\n## Role\r\n\r\nInterpret supplied deterministic evidence; do not re-grade the learner and do not produce a tutoring\r\nmessage. A Supervisor may call this Skill as a bounded manager-as-tools capability after a judge or\r\ntrusted tool has returned evidence. The result informs `adaptive-pedagogy`, which remains the only\r\nlearner-facing writer.\r\n\r\nUse `references/formative-assessor-task.schema.json` and\r\n`references/formative-assessor-result.schema.json` for the exact contract. Use\r\n`references/evidence-policy.md` for the evidence-to-policy mapping and\r\n`references/quality-gate.md` before returning.\r\n\r\n## Evidence boundary\r\n\r\nTreat `grader_evidence`, explicit learner confidence, hint history, tool observations, and\r\n`evidence_refs` as the complete evidence boundary. Never browse, invent an error pattern, or infer\r\nintelligence, motivation, personality, disability, mental health, or learning style. Confidence is\r\nvalid only when the learner supplied it or the host captured it in a UI event; never infer confidence\r\nfrom wording or tone.\r\n\r\nIf correctness is ambiguous, ungraded, or contradicted by the supplied records, set\r\n`next_probe_needed=true` and explain the missing evidence. Do not resolve ambiguity by guessing.\r\n\r\n## Interpretation workflow\r\n\r\n1. Check the task version, concept, deterministic correctness, independence, assistance history,\r\n   explicit confidence, error pattern, and evidence IDs.\r\n2. Assign one evidence state. Treat `demonstrated` as evidence for this event, not permanent mastery.\r\n3. Preserve the supplied error pattern; only name a pattern when the grader or rubric supports it.\r\n4. Choose exactly one `recommended_policy_signal` that `adaptive-pedagogy` understands. The signal\r\n   is a policy input, not a learner-facing explanation.\r\n5. Set `next_probe_needed` only when another independent observation can change the next support\r\n   action. Add `probe_reason` whenever it is true.\r\n6. Return structured Chinese prose and raw `evidence_refs`; never include `student_response`,\r\n   `tutoring_message`, `question_to_learner`, or a mandatory learner action.\r\n\r\n## Routing defaults\r\n\r\n- Independent correct evidence: `demonstrated` → `advance` or a natural `transfer_check`.\r\n- Assisted correct evidence: `emerging` or `needs_recheck` → `transfer_check` when independence is\r\n  still unverified.\r\n- Incorrect answer with a stable, rubric-supported rule and explicit high confidence:\r\n  `misconception_evidence` → `conceptual_conflict`.\r\n- Incorrect answer with low/unknown confidence and no stable rule: `needs_recheck` → `minimal_cue` or\r\n  `progressive_hint`.\r\n- Partial evidence: `emerging` → `minimal_cue`, `targeted_explanation`, or `transfer_check`.\r\n- Ambiguous or ungraded evidence: `needs_recheck`, `next_probe_needed=true` → `retrieve_or_predict`.\r\n\r\n## Runtime boundary\r\n\r\nThis Skill is conditionally blocking only when the host cannot safely interpret the evidence itself.\r\nOn a clear deterministic result, skip it. When called, return once and pass the structured result to\r\n`adaptive-pedagogy`; never hand off to another assessor or tutor and never await learner-state,\r\nvisual, quiz, or graph sidecars.\r\n\r\n## Validation\r\n\r\nUse the bundled helper for deterministic checks:\r\n\r\n```text\r\npython scripts/assessor_contract.py validate-task <task.json>\r\npython scripts/assessor_contract.py validate-pair <task.json> <result.json>\r\n```\r\n\r\n"
+  },
+  {
+    "slug": "goal-interpreter",
+    "name": "goal-interpreter",
+    "displayName": "目标解析",
+    "description": "Turn a learner utterance into a goal object: what they want, about what, and how urgently. It never decides which agent or workflow runs - that is the orchestrator's job.",
+    "displayDescription": "把学习者的话解析成目标对象（要什么/关于什么/多急），不决定跑哪个 agent 或流程。",
+    "category": "Orchestration & Runtime",
+    "capabilities": [
+      "goal-interpreter"
+    ],
+    "phase": "runtime",
+    "headings": [
+      "目标解析",
+      "角色",
+      "输出什么",
+      "解析规则",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: goal-interpreter\r\ndescription: >-\r\n  Turn a learner utterance into a goal object: what they want, about what, and how urgently. It\r\n  never decides which agent or workflow runs - that is the orchestrator's job.\r\nlicense: MIT\r\nmetadata:\n  category: \"Orchestration & Runtime\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 目标解析\r\n  status-line: 正在理解你的学习目标…\r\n  display-description: 把学习者的话解析成目标对象（要什么/关于什么/多急），不决定跑哪个 agent 或流程。\r\n  output-language: zh-CN\r\n  output-contract: goal.v1\r\n  execution-mode: shared-contract\r\n  phase: runtime\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  ownership: shared\r\n---\r\n\r\n# 目标解析\r\n\r\n## 角色\r\n\r\n这是旧 `global_router` 的替代品，**能力被刻意缩小**：它只回答「学习者想要什么」，\r\n不回答「接下来跑什么」。后者由 orchestrator 每轮根据状态重新计算。\r\n\r\n**输出里没有 `route` 字段，也不允许有。** 出现任何形如\r\n`{\"route\": \"answer_user\"}` 的输出都是回到了被删掉的旧架构。\r\n\r\n## 输出什么\r\n\r\n```json\r\n{\r\n  \"goal_type\": \"learn\",\r\n  \"topic\": \"TCP 拥塞控制\",\r\n  \"knowledge_points\": [\"tcp-congestion\"],\r\n  \"expected_outcome\": \"能解释 cwnd 如何随丢包变化\",\r\n  \"constraints\": [\"时间不超过 20 分钟\"],\r\n  \"urgency\": 0.6,\r\n  \"is_interruption\": false,\r\n  \"is_correction\": false,\r\n  \"raw_utterance\": \"帮我讲讲 TCP 拥塞控制\"\r\n}\r\n```\r\n\r\n`goal_type` 取值：`learn` / `review` / `assess` / `ask` / `practice` / `report` / `manage`。\r\n\r\n## 解析规则\r\n\r\n1. **把模糊主题解析到知识点 id**：读 `learning_profile` 里该学习者已有的知识点，\r\n   优先复用既有 id，不要每次新造一个。解析不出来就留空数组，让 orchestrator 去建。\r\n2. **区分三种栈操作**：\r\n   - 新的独立目标 → 设为当前目标\r\n   - 打断（正在学 A 时问了 B）→ `is_interruption=true`，push\r\n   - 纠偏（「不是这个意思」/「我要的是…」）→ `is_correction=true`，replace\r\n3. **`expected_outcome` 要可判定**。「学会 TCP」不可判定；「能解释 cwnd 如何随丢包变化」可判定。\r\n   写不出可判定的结果就留空，orchestrator 会补一个完成条件。\r\n4. **`urgency` 来自学习者的话**（「明天考试」→ 高），不是来自主题难度。\r\n5. **不要替学习者决定教学形式**。用户说「给我画个图」是约束（`constraints`），\r\n   不是「必须调用可视化 agent」——orchestrator 仍可能先补前置并协商。\r\n\r\n## 反模式\r\n\r\n- 输出 `route` / `agent` / `workflow` / `next_node` 任何一种字段。\r\n- 按关键词判断该跑哪个 agent（「图解」→ 可视化）。这正是被删掉的东西。\r\n- 把一句话拆成五个目标。一次一个当前目标。\r\n"
+  },
+  {
+    "slug": "graceful-degradation",
+    "name": "graceful-degradation",
+    "displayName": "降级回退",
+    "description": "Keep the runtime loop moving when a model, tool, or artifact step fails. Use on any failure path; a failed step must degrade to a usable result, never stall the loop.",
+    "displayDescription": "在模型、工具或产物步骤失败时让运行时循环继续，失败必须降级成可用结果而不是卡住。",
+    "category": "Orchestration & Runtime",
+    "capabilities": [
+      "graceful-degradation"
+    ],
+    "phase": "shared",
+    "headings": [
+      "降级回退",
+      "角色",
+      "降级阶梯",
+      "必须遵守",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: graceful-degradation\r\ndescription: >-\r\n  Keep the runtime loop moving when a model, tool, or artifact step fails. Use on any failure\r\n  path; a failed step must degrade to a usable result, never stall the loop.\r\nlicense: MIT\r\nmetadata:\n  category: \"Orchestration & Runtime\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 降级回退\r\n  status-line: 正在保留已完成的内容…\r\n  display-description: 在模型、工具或产物步骤失败时让运行时循环继续，失败必须降级成可用结果而不是卡住。\r\n  output-language: zh-CN\r\n  execution-mode: shared-contract\r\n  phase: shared\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  provider: \r\n  ownership: shared\r\n---\r\n\r\n# 降级回退\r\n\r\n## 角色\r\n\r\n自主循环最危险的失败不是出错，是**停住**。学习者对着一个不动的界面，比拿到一个稍差的结果糟糕得多。\r\n每条失败路径都必须有下一步。\r\n\r\n## 降级阶梯\r\n\r\n按顺序尝试，能停在哪一级就停在哪一级：\r\n\r\n1. **重试一次**——仅限幂等步骤（读档案、解析、校验）。非幂等步骤（生成产物、写证据）不重试。\r\n2. **确定性回退**——不用模型也能产出的结果：\r\n   - 排序失败 → 直接取候选集打分最高的那个（argmax），不问模型。\r\n   - 讲解生成失败 → 用课程包的提示阶梯 `hint_ladder` 里当前层级那一条。\r\n   - 产物生成失败 → 用宿主预置的 fallback 页面。\r\n   - 判分失败 → 保留作答证据，标 `needs_recheck`，不猜分数。\r\n3. **缩小范围**——把一个大任务换成它的最小可交付部分（整套课件 → 一页引入）。\r\n4. **交还给学习者**——`awaits_user=true`，说明发生了什么和可选项。\r\n5. **标记 FAILED**——只有前四级都不可行时。必须带一句学习者能看懂的中文原因。\r\n\r\n## 必须遵守\r\n\r\n- **降级要留痕**：每次降级产出一条 `error_pattern` 证据和一条 decision trace，\r\n  否则评测会把降级结果当成正常结果统计。\r\n- **不要伪装成功**：降级结果要在响应里标明是回退版本。\r\n- **不要吞掉预算**：降级不重置 `max_steps` / `max_replans`，否则失败会变成无限循环。\r\n- **不可逆操作永不自动降级重试**：写图谱、建日程、启用 forged skill 失败就停下来问。\r\n\r\n## 反模式\r\n\r\n- `except Exception: pass`，然后循环继续转但状态没变。\r\n- 用模型去处理\"模型不可用\"。\r\n- 降级之后不告诉学习者，让他以为拿到的是完整结果。\r\n"
+  },
+  {
+    "slug": "incremental-delivery",
+    "name": "incremental-delivery",
+    "displayName": "增量交付",
+    "description": "让内容生成优先交付最小可用结果，再逐步增强。",
+    "displayDescription": "先交付可用草稿，再继续增强内容。",
+    "category": "Orchestration & Runtime",
+    "capabilities": [
+      "incremental-delivery"
+    ],
+    "phase": "shared",
+    "headings": [
+      "增量交付"
+    ],
+    "markdown": "---\r\nname: incremental-delivery\r\ndescription: >-\r\n  让内容生成优先交付最小可用结果，再逐步增强。\r\nmetadata:\n  category: \"Orchestration & Runtime\"\n  version: 1.0.0\n  display-name: 增量交付\r\n  display-description: 先交付可用草稿，再继续增强内容。\r\n  phase: shared\r\n  ownership: shared\r\n  status-line: 正在准备可用的第一版内容…\r\n---\r\n\r\n# 增量交付\r\n\r\n前两轮内先 stage 一份最小可用 artifact，后续只做增强。\r\n"
+  },
+  {
+    "slug": "interactive-lecture-deck",
+    "name": "interactive-lecture-deck",
+    "displayName": "交互式讲解课件",
+    "description": "Build a fixed-size, self-contained HTML lecture deck with visual slides, structured explanations, zoom data, and offline delivery.",
+    "displayDescription": "构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。",
+    "category": "Content & Visualization",
+    "capabilities": [
+      "content.deck"
+    ],
+    "phase": "prepare",
+    "headings": [
+      "Lecture Builder",
+      "Role",
+      "Fast path (default — prioritize artifact delivery)",
+      "Fast-path quality kernel",
+      "v2 contract checklist (hard requirements)",
+      "Output language",
+      "Required output",
+      "Reference loading and authoring order",
+      "Content and layout rules",
+      "Visual outline workflow",
+      "Build, validation, and delivery"
+    ],
+    "markdown": "---\r\nname: interactive-lecture-deck\r\ndescription: >-\r\n  Build a fixed-size, self-contained HTML lecture deck with visual slides, structured explanations, zoom data, and offline delivery.\r\nlicense: MIT\r\nmetadata:\n  category: \"Content & Visualization\"\n  author: LingXi-Org\n  version: 1.4.0\r\n  display-name: 交互式讲解课件\r\n  display-description: 构建包含视觉化幻灯片、结构化讲解数据和离线交付能力的自包含 HTML 课程课件。\r\n  output-language: zh-CN\r\n  output-contract: interactive-lecture-deck-result.v2.1\r\n  execution-mode: artifact-generation\r\n  phase: prepare\r\n  critical-path: false\r\n  learner-facing: artifact\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: background\r\n  blocking: false\r\n  default-blocking-hop-budget: \"0\"\r\n  capabilities: content.deck\r\n  status-line: 正在把讲义拆成幻灯片…\r\n  provider: lecture_deck\r\n  ownership: dedicated\r\n  eval-suite: interactive-lecture-deck-v1\r\n---\r\n\r\n# Lecture Builder\r\n\r\n## Role\r\n\r\nAct as the interactive lecture-deck author in a multi-agent teaching system. Reconstruct supplied\r\nteaching content into a visual narrative. This preparation artifact may run in parallel with\r\n`lesson-intro`; do not invoke it as a fact-checker or wait for any external-research result. Slides\r\nshow structure; the explanation panel makes the causal reasoning clear. Do not independently invent\r\nor fact-check lesson claims unless the caller asks for that work. The primary learner-facing delivery\r\nis the built, offline `dist/lecture.html`.\r\nThe source slides, lecture data, runtime, and manifest remain available in the project workspace\r\nwhen needed for authoring, build, alignment, and validation, but do not routinely duplicate or\r\nreturn them as separate learner-facing exports.\r\n\r\n## Fast path (default — prioritize artifact delivery)\r\n\r\nOptimize for one useful, validated artifact from the supplied context. Unless the caller requests\r\n`constraints.qualityMode: full`, use this path:\r\n\r\n1. Read `references/task-contract.md` only if inputs or output paths are unclear. Otherwise use defaults.\r\n2. Read only the minimum reference needed to write the current artifact; templates and design references\r\n   are optional when a usable existing layout is available.\r\n3. Make a compact outline and start authoring immediately. Page count, layout, and anchor detail may be\r\n   chosen incrementally; do not pause for a candidate comparison or staged approval.\r\n4. Scaffold/copy the runtime, write the smallest complete `lecture.json` and `manifest.json`, build the\r\n   standalone artifact, then run a quick validation. Run strict validation and targeted repairs when\r\n   practical; do not block delivery on non-critical warnings.\r\n\r\nUse the full path only when the caller asks for pixel-level visual review or when the task has custom\r\nstyle/density, content-driven anchors, complex protected-view geometry, or a validator-detected layout\r\nrisk. Full path adds `design-system.md`, `visual-authoring.md`, and `zoom-contract.md`; it may also run\r\n`measure_anchors.py` and temporary browser/render checks.\r\n\r\n### Fast-path quality kernel\r\n\r\n- Keep `opening` first, `closing` last, and every middle page `content`.\r\n- Put one conclusion and one dominant `data-visual` on each content page.\r\n- Keep visible text near 100 equivalent Chinese/ASCII units and never above 140.\r\n- Add one useful zoom point to a content page when it improves teaching; additional zooms are optional.\r\n- Keep anchors reasonably sized and aligned with both `data-rect` and `lecture.json`; use the runtime's\r\n  defaults when exact geometry is not important.\r\n- Keep slides static, self-contained, offline, and free of scripts, external assets, animation, shadows,\r\n  gradients, and heavyweight UI chrome.\r\n- Preserve the runtime's protected-view, geometry-probe, final guard, and full-bleed behavior.\r\n- Prefer `build_standalone.py` followed by validation before claiming delivery. If strict validation is\r\n  unavailable or non-critical warnings remain, deliver the built artifact and report the limitation.\r\n\r\n### v2 contract checklist (hard requirements)\r\n\r\nBefore staging `lecture.json`, check every item below. These are schema requirements, not style\r\npreferences:\r\n\r\n- Every anchor object has `id`, non-empty `label`, and `rect: {x,y,w,h}`. Do not omit `label` and do\r\n  not use the old four-number rect array.\r\n- Every step has `advance: \"manual\"`.\r\n- Every `overview` step uses exactly the full-view camera shape `{ \"mode\": \"fit\" }`; it must not\r\n  carry `anchorId`, `depth`, `scale`, or `focus`. Only a `zoom` step uses `camera.mode: \"anchor\"`.\r\n- Every SVG `<text>` in every slide has one of the classes `t`, `ts`, `th`, or `tn`.\r\n\r\nRun a final schema/strict validation after staging. If a generated file is incomplete, finish or\r\nrepair that source file before returning the receipt; do not claim a staged deck is ready from a\r\npartial `lecture.json`.\r\n\r\n## Output language\r\n\r\nAll slide titles, labels, panel prose, onboarding text, narration, manifest descriptions, and\r\ndelivery notes must be Simplified Chinese. Preserve formulas, code, identifiers, URLs, schema keys,\r\nand file names in their original form. The output contract is `interactive-lecture-deck-result.v2.1`.\r\n\r\n## Required output\r\n\r\nProduce these aligned project artifacts as needed for authoring, building, and strict validation;\r\nthe final learner-facing delivery is `dist/lecture.html`:\r\n\r\n| Artifact | Requirement |\r\n| --- | --- |\r\n| `slides/sNN.html` | One self-contained 1280×720 HTML slide per page; required source/validation artifact |\r\n| `lecture.json` | Overview, zoom steps, anchors, highlights, and Chinese panels; required alignment data |\r\n| `runtime/index.html` | The bundled local presentation runtime; required runtime/build artifact |\r\n| `dist/lecture.html` | One offline HTML publication with all content inlined; primary learner-facing delivery |\r\n| `manifest.json` | Artifact inventory and validation result; required project record, not a redundant export |\r\n\r\nDo not generate standalone PNG/JPG images, PowerPoint/PPTX exports, or duplicate HTML/JSON copies\r\nwhen the inline slide assets and `dist/lecture.html` already serve the purpose. Temporary files\r\nneeded for an important design, validation, rendering, or compatibility check may be viewed or\r\nwritten to the host; keep them ephemeral when possible and do not include them in the delivery.\r\nNever remove a required project artifact before the build and strict validator have completed.\r\n\r\n## Reference loading and authoring order\r\n\r\n1. Read this file.\r\n2. Read `references/task-contract.md` only when needed to resolve a missing contract value; do not ask\r\n   a follow-up question for ordinary omissions. Omitted `constraints.qualityMode` means `fast`.\r\n3. Follow the fast path unless an escalation condition applies. Load only the directly relevant\r\n   references and templates; load the full-path references conditionally.\r\n4. Start from `assets/templates/slide-base.html`, finish the opening and closing skeletons, then batch\r\n   author the content pages.\r\n5. Read `references/lecture-data.md` before writing non-trivial `lecture.json`; for a minimal deck,\r\n   follow the existing example/schema and avoid loading unrelated zoom references.\r\n6. Use `scripts/init_project.py` for a new project when available, or copy `assets/runtime/index.html`\r\n   into an existing project runtime directory.\r\n7. Run `python3 scripts/build_standalone.py <project_dir>`.\r\n8. Run `python3 scripts/validate_deck.py <project_dir>` when available. Use `--strict` for full quality\r\n   mode or when the quick check reports contract errors. Run `measure_anchors.py` only for content-driven\r\n   geometry or a detected anchor risk.\r\n\r\n## Content and layout rules\r\n\r\n1. Include an `opening` first slide, `closing` last slide, and `content` for every middle slide.\r\n2. Keep every slide exactly 1280×720; let the runtime handle fitting.\r\n3. Position direct content absolutely with explicit coordinates and stable anchor rectangles.\r\n4. Give every content slide at least one `data-visual` object; never make a text-only body slide.\r\n5. Use a conclusion-style title, minimal Chinese labels, and place detailed reasoning in the panel.\r\n6. Draw the central relationship before adding labels. Choose a relation graph, process, coordinate\r\n   chart, timeline, layered structure, comparison, formula map, or example decomposition.\r\n7. Define one anchor when zoom is useful; use two to four only when the explanation genuinely benefits.\r\n8. Make each zoom step explain one observation or causal relation; split steps when the panel is\r\n   overloaded.\r\n9. Keep slides self-contained: no network requests, no scripts in slides, and images only as\r\n   inline SVG or `data:` URIs.\r\n10. Keep page animation in the runtime, not in slide CSS.\r\n11. Keep `lecture.json` anchors and HTML `data-anchor`/`data-rect` values exactly aligned.\r\n12. Write panels as natural Chinese teacher explanations following observation → reason → meaning;\r\n    do not read slide text aloud.\r\n13. Preserve the runtime's spatial 3D transition, free-view layer, protected viewport solving,\r\n    clean full-bleed interface, and first-frame onboarding contract.\r\n14. Keep all schema-external values inside `extensions`; do not invent top-level fields.\r\n\r\n## Visual outline workflow\r\n\r\nBefore authoring, create one internal outline with page role, one-sentence Chinese conclusion, visual\r\ngrammar, two to four zoom anchors, and the learner realization for each zoom. Compress long source\r\nmaterial into three to seven visual propositions rather than paginating paragraphs. Do not create or\r\ncompare multiple candidate outlines unless the caller explicitly requests alternatives.\r\n\r\nUse at least three pages when the source supports it. Default totals are 5–7 for one problem, 6–8 for\r\none concept, and 8–12 for a lesson chapter, but a shorter complete deck is acceptable when speed or\r\nsource length calls for it. A requested `slideCount` includes opening and closing.\r\n\r\n## Build, validation, and delivery\r\n\r\nUse the standard project layout for the required build and validation artifacts:\r\n\r\n```text\r\n<project_dir>/\r\n├── slides/s01.html\r\n├── runtime/index.html\r\n├── dist/lecture.html\r\n├── lecture.json\r\n└── manifest.json\r\n```\r\n\r\nRun the build and the quickest available validator. If anchor geometry is content-driven, also run\r\n`python3 scripts/measure_anchors.py <project_dir> --round 8`; do not run it by default. Report total\r\npages, content pages, zoom-step count, primary standalone path, validation status, assumptions, and\r\nfallback items in Chinese. Mention source/validation paths only when they help the caller use or\r\ninspect the project; do not return redundant copies or scratch artifacts. The final published deck and\r\nall prose in its manifest must be Chinese.\r\n"
+  },
+  {
+    "slug": "interactive-visual-explainer",
+    "name": "interactive-visual-explainer",
+    "displayName": "交互式可视化讲解",
+    "description": "Create a self-contained, offline interactive HTML explainer for concepts that are easier to understand through visual manipulation.",
+    "displayDescription": "为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。",
+    "category": "Content & Visualization",
+    "capabilities": [
+      "content.visual"
+    ],
+    "phase": "teach",
+    "headings": [
+      "Visual Explainer",
+      "Role",
+      "Output language",
+      "Defaults and intake",
+      "Authoring workflow",
+      "Non-negotiable design rules",
+      "Required delivery note"
+    ],
+    "markdown": "---\r\nname: interactive-visual-explainer\r\ndescription: >-\r\n  Create a self-contained, offline interactive HTML explainer for concepts that are easier to understand through visual manipulation.\r\nlicense: MIT\r\nmetadata:\n  category: \"Content & Visualization\"\n  author: LingXi-Org\n  version: 1.3.0\r\n  display-name: 交互式可视化讲解\r\n  display-description: 为适合通过观察和操作理解的概念生成可离线运行的交互式 HTML 讲解页面。\r\n  output-language: zh-CN\r\n  output-contract: interactive-visual-explainer-delivery.v1.2\r\n  execution-mode: artifact-generation\r\n  phase: teach\r\n  critical-path: false\r\n  learner-facing: artifact\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: background\r\n  capabilities: content.visual\r\n  status-line: 正在制作可视化讲解…\r\n  provider: visual_explainer\r\n  ownership: dedicated\r\n  eval-suite: interactive-visual-explainer-v1\r\n---\r\n\r\n# Visual Explainer\r\n\r\n## Role\r\n\r\nReceive a concept from the orchestrating agent and produce one independently openable interactive\r\nteaching artifact. It is a non-blocking sidecar requested by `adaptive-pedagogy`, not a competing\r\nlearner-facing chat writer. The caller must be able to render useful Chinese fallback text before\r\nthis artifact is ready. Make the conclusion live in the visual interaction, not only in prose. The\r\nfinal delivery is exactly one `.html` file with no external requests, offline support, light/dark mode,\r\nand print support. Do not routinely persist or deliver redundant intermediate files, such as\r\nstandalone image or PowerPoint exports of content already represented in the HTML. Temporary files\r\nneeded for an important design, validation, rendering, or compatibility check may be viewed or\r\nwritten to the host; keep them ephemeral when possible and never include them in the final\r\ndelivery unless explicitly requested. All explanatory graphics in the final HTML must be authored\r\ninline with SVG and/or CSS.\r\n\r\n## Output language\r\n\r\nAll visible prose, labels, control text, explanations, accessibility text, captions, and delivery\r\nnotes must be Simplified Chinese. Preserve formulas, variable names, code identifiers, URLs, and\r\ntechnical protocol tokens. Use Chinese even when the input is English unless a higher-priority\r\nruntime policy explicitly overrides this rule.\r\n\r\n## Defaults and intake\r\n\r\nRead the supplied concept, audience, and emphasis. If fields are missing, use these defaults\r\nwithout asking a follow-up question:\r\n\r\n- concept: required; if absent, return Chinese `需求不完整` and do not guess;\r\n- learning objective: “操作完之后，学习者应该明白 ___”;\r\n- audience: familiar with an adjacent field but new to this concept;\r\n- visual style: restrained academic paper style;\r\n- interaction: choose one primary pattern from `references/interaction-patterns.md`;\r\n- length: one and a half to three screens, one main interaction, and one or two supporting views;\r\n- dependency: zero dependency. If a CDN is explicitly necessary, document an offline fallback.\r\n\r\n## Authoring workflow\r\n\r\nFollow this order:\r\n\r\n1. Write the one-sentence Chinese learning objective before adding any element.\r\n2. Identify one to three controllable variables. If no variable exposes a causal relation, use a\r\n   static figure and Chinese explanation instead of forced interaction.\r\n3. Choose the teaching pattern first, then the chart or SVG form. Read the relevant references.\r\n4. Lay out coordinates in a 680-wide viewBox using `L=60 R=640 T=40 B=300`; budget Chinese text\r\n   at 14 px per character and verify bounds and overlap.\r\n5. Start from `assets/template.html`, inline `assets/lingxi.css` without changing its tokens, and\r\n   keep every graphic in the final HTML as inline SVG and/or CSS. Do not routinely export a\r\n   standalone image or presentation file; if a temporary file is necessary for a key check, use it\r\n   only for that check and do not deliver it.\r\n6. Assign colors by semantic role. Rerun both palette checks after every color change:\r\n\r\n   ```text\r\n   node scripts/validate_palette.js \"<hex,hex,…>\" --mode light\r\n   node scripts/validate_palette.js \"<hex,hex,…>\" --mode dark\r\n   ```\r\n\r\n   Fix every FAIL before continuing.\r\n7. Run `node scripts/check_page.js <page>.html`. Resolve every FAIL before delivery and explain\r\n   any remaining WARN in the delivery note. This static check is the required artifact validation\r\n   gate. Screenshots may be generated temporarily when a visual check is useful, but they are not\r\n   required and are not delivery files.\r\n8. Compare the result with `references/anti-patterns.md` before delivery.\r\n\r\n## Non-negotiable design rules\r\n\r\n1. Keep the artifact single-file, offline, and dependency-free by default.\r\n2. Teach one thing in the first frame; do not require a control change to understand the premise.\r\n3. Place each control below the figure it controls. Keep its caption between figure and controls.\r\n4. Use one `render()` path to update the figure, numbers, annotations, and `aria-live` conclusion.\r\n5. Round every displayed number and give sliders an explicit `step`.\r\n6. Never use dual y-axes.\r\n7. Keep color attached to entities, not rank; use no more than three colors per figure.\r\n8. Give every SVG `<text>` element a `t`, `ts`, `th`, or `tn` class.\r\n9. Select a dedicated dark palette; never create dark mode by inversion.\r\n10. Use only 400/500 font weights, 0.5 px hairlines, no gradients or shadows, sentence case, and\r\n    no emoji.\r\n11. Deliver only the final self-contained HTML and the short delivery note. Any optional\r\n    screenshots or other temporary validation artifacts must not be delivered.\r\n\r\n## Required delivery note\r\n\r\nReturn a short Chinese note, not the full HTML, with:\r\n\r\n```text\r\n文件：<absolute path>\r\n知识点：<one sentence>\r\n学习目标：操作完之后，学习者应该明白 ___\r\n主交互：<pattern> + <control and changed variable>\r\n图形清单：图1 <description> / 图2 <description>\r\n校验：validate_palette <light PASS / dark PASS>；check_page <FAIL count / WARN count>\r\n补的假设：<assumptions>\r\n已知取舍：<removed content and reason>\r\n```\r\n\r\nRead `assets/template.html` before implementation. Load only the directly relevant references,\r\nincluding design tokens, SVG craft, interaction patterns, and anti-patterns. Treat the final HTML\r\nand delivery note as Chinese artifacts.\r\n"
+  },
+  {
+    "slug": "knowledge-qa",
+    "name": "knowledge-qa",
+    "displayName": "知识点答疑",
+    "description": "Answer a learner's follow-up question about the current knowledge point using the material already produced in this task. Use for direct questions; do not use it to run a teaching strategy or to reveal unanswered quiz answers.",
+    "displayDescription": "基于本任务已产出的材料回答学习者对当前知识点的追问，不泄露未提交的题目答案。",
+    "category": "Teaching & Dialogue",
+    "capabilities": [
+      "dialog.answer"
+    ],
+    "phase": "teach",
+    "headings": [
+      "知识点答疑",
+      "角色",
+      "规则",
+      "输出契约 `knowledge-qa-result.v1`",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: knowledge-qa\r\ndescription: >-\r\n  Answer a learner's follow-up question about the current knowledge point using the material\r\n  already produced in this task. Use for direct questions; do not use it to run a teaching\r\n  strategy or to reveal unanswered quiz answers.\r\nlicense: MIT\r\nmetadata:\n  category: \"Teaching & Dialogue\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 知识点答疑\r\n  display-description: 基于本任务已产出的材料回答学习者对当前知识点的追问，不泄露未提交的题目答案。\r\n  output-language: zh-CN\r\n  output-contract: knowledge-qa-result.v1\r\n  execution-mode: synchronous-structured-generation\r\n  phase: teach\r\n  critical-path: true\r\n  learner-facing: true\r\n  state-write-mode: none\r\n  parallel-safe: false\r\n  latency-class: interactive\r\n  capabilities: dialog.answer\r\n  status-line: 正在回答你的追问…\r\n  provider: answer_user\r\n  ownership: dedicated\r\n---\r\n\r\n# 知识点答疑\r\n\r\n## 角色\r\n\r\n学习者问了一个具体问题，要的是答案，不是一次苏格拉底式对话。这个 skill 只做直接答疑；\r\n需要选择教学策略时那是 `adaptive-pedagogy` 的事。\r\n\r\n## 规则\r\n\r\n1. **基于本任务已有材料回答**：课程引入、课件、可视化、已判分的作答。材料里没有的，\r\n   说没有，不要即兴编造细节。\r\n2. **不泄露未提交的题目答案**。学习者手上有一份未作答的 quiz 时，回答不得包含答案标记\r\n   里的短语或数值——宿主会做泄题检查（`kernel/policy.py::check_leakage`），\r\n   被判泄题就会退回 `hint_ladder` 的当前一级。\r\n3. **简短**。一个问题一段话，需要时加一个例子。这不是重讲一遍课。\r\n4. **回答完要产出证据**：学习者的提问本身是 `self_report` 信号，写进\r\n   `my_questions`，供后续排序使用。\r\n5. 问题超出当前知识点范围时，如实说明并把它作为一个候选目标交回 orchestrator，\r\n   **不要顺手把另一个知识点也讲了**。\r\n\r\n## 输出契约 `knowledge-qa-result.v1`\r\n\r\n```json\r\n{\r\n  \"text\": \"面向学习者的中文回答\",\r\n  \"grounded_in\": [\"lesson-intro\", \"lecture-deck#s04\"],\r\n  \"out_of_scope\": false,\r\n  \"suggested_goal\": null,\r\n  \"evidence\": [{\"signal\": \"self_report\", \"knowledge_point\": \"tcp-congestion\",\r\n                \"summary\": \"问：cwnd 和 rwnd 到底谁说了算\"}]\r\n}\r\n```\r\n\r\n## 反模式\r\n\r\n- 用反问代替回答（「你觉得呢？」）——学习者问的是事实问题。\r\n- 把整页课件复述一遍。\r\n- 顺带把下一题的答案讲了。\r\n"
+  },
+  {
+    "slug": "learner-interview",
+    "name": "learner-interview",
+    "displayName": "了解你的基础",
+    "description": "用少量问题了解学习者对目标知识点的起点，并产出结构化自我报告证据。",
+    "displayDescription": "用两三个短问题摸清学习起点。",
+    "category": "Teaching & Dialogue",
+    "capabilities": [
+      "dialog.interview"
+    ],
+    "phase": "teaching",
+    "headings": [
+      "学习起点访谈"
+    ],
+    "markdown": "---\r\nname: learner-interview\r\ndescription: >-\r\n  用少量问题了解学习者对目标知识点的起点，并产出结构化自我报告证据。\r\nmetadata:\n  category: \"Teaching & Dialogue\"\n  version: 1.0.0\n  display-name: 了解你的基础\r\n  display-description: 用两三个短问题摸清学习起点。\r\n  phase: teaching\r\n  capabilities: dialog.interview\r\n  provider: learner_interview\r\n  learner-facing: true\r\n  critical-path: true\r\n  blocking: true\r\n  latency-class: interactive\r\n  parallel-safe: false\r\n  ownership: dedicated\r\n---\r\n\r\n# 学习起点访谈\r\n\r\n只问两三个短问题，围绕当前知识点确认学习者已经会什么、哪里不确定、希望达到什么程度。\r\n返回结构化 `EvidenceRecord`，信号使用 `SELF_REPORT`；不要写成长篇散文，也不要泄露检测答案。\r\n"
+  },
+  {
+    "slug": "learner-state-reflector",
+    "name": "learner-state-reflector",
+    "displayName": "学习状态反思",
+    "description": "Compress recent learning events into cautious, traceable learner-state update proposals without interrupting instruction.",
+    "displayDescription": "将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。",
+    "category": "Learner State & Curriculum",
+    "capabilities": [
+      "model.reflect"
+    ],
+    "phase": "learner-model",
+    "headings": [
+      "State Observer",
+      "Role",
+      "Output language",
+      "Hard rules",
+      "Inputs",
+      "Evidence compression",
+      "Verification debt and prefetch",
+      "Optional learner-model card",
+      "Required result"
+    ],
+    "markdown": "---\r\nname: learner-state-reflector\r\ndescription: >-\r\n  Compress recent learning events into cautious, traceable learner-state update proposals without interrupting instruction.\r\nlicense: MIT\r\nmetadata:\n  category: \"Learner State & Curriculum\"\n  author: LingXi-Org\n  version: 1.1.0\r\n  display-name: 学习状态反思\r\n  display-description: 将近期学习事件整理为谨慎、可追溯的学习状态更新建议，不打断教学流程。\r\n  output-language: zh-CN\r\n  output-contract: learner-state-reflector-result.v1\r\n  execution-mode: non-blocking-background\r\n  blocking: \"false\"\r\n  phase: learner-model\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: proposal-only\r\n  parallel-safe: true\r\n  latency-class: background\r\n  capabilities: model.reflect\r\n  status-line: 正在整理你的学习状态…\r\n  provider: learner_reflector\r\n  ownership: dedicated\r\n  eval-suite: learner-state-reflector-v1\r\n---\r\n\r\n# State Observer\r\n\r\n## Role\r\n\r\nRun after or alongside the already-rendered student-facing response. Remove memory and evidence\r\ncompression work from the learner's critical path. Never make this Skill a dependency that\r\n`adaptive-pedagogy` must await, and never compete with it for learner-facing output.\r\n\r\n## Output language\r\n\r\nWrite all prose, learner-model claims, labels, and suggestions in Simplified Chinese. Preserve\r\nprotocol keys, evidence IDs, concept paths, file names, URLs, and schema tokens in their original\r\nform. Return `learner-state-reflector-result.v1`.\r\n\r\n## Hard rules\r\n\r\n1. Never produce a required student reply or a student-facing tutoring message.\r\n2. Preserve raw evidence IDs so every proposal is traceable.\r\n3. Prefer categorical evidence states over false precision.\r\n4. Never infer intelligence, motivation, disability, personality, mental health, or learning style.\r\n5. Store confidence only when the learner explicitly supplied it or the UI captured it.\r\n6. Treat an open learner-model card as optional UI; never interrupt the lesson for agreement.\r\n7. Return proposals for the host state store; do not write learner state directly.\r\n8. Preserve raw events when reflection fails so the host can replay them later.\r\n\r\n## Inputs\r\n\r\nRead `references/learner-state-reflector-task.schema.json`. Process independent answers, answers\r\nafter hints, local hint levels, support choices, visual predictions or observations, teach-back\r\nexplanations, learner-model challenges, and direct explanations shown.\r\n\r\n## Evidence compression\r\n\r\nFor each concept, record only supported states:\r\n\r\n- `not_observed`\r\n- `emerging`\r\n- `demonstrated`\r\n- `misconception_evidence`\r\n- `needs_recheck`\r\n\r\nKeep whether evidence was independent or assisted, its recency, repeated patterns, and evidence\r\nIDs. Never convert one correct answer into permanent mastery.\r\n\r\n## Verification debt and prefetch\r\n\r\nPropose a `verification_debt` item when a strong hint or complete solution was shown without later\r\nindependent evidence. Propose discharging it after an independent retrieval or transfer task\r\nsucceeds. Suggest the next natural checkpoint; do not schedule an immediate question.\r\n\r\nOptional prefetch suggestions may include a likely next concept, a visual brief, or one branch note.\r\nThey are caches only, and `adaptive-pedagogy` must check them against the next learner message.\r\n\r\n## Optional learner-model card\r\n\r\nWhen useful, return a non-blocking card with Chinese claims and the actions `我不同意` and\r\n`让我证明`. Do not require the learner to accept it.\r\n\r\n## Required result\r\n\r\nReturn `evidence_summary`, `state_update_proposals`, and `verification_debt_proposals`, plus\r\noptional `learner_model_card` or `prefetch_suggestions`. Every prose value must be Chinese. Do\r\nnot return a tutoring message, a diagnosis, or a mandatory learner action.\r\n"
+  },
+  {
+    "slug": "learning-companion",
+    "name": "learning-companion",
+    "displayName": "学习对话",
+    "description": "在学习任务执行期间快速回应学习者的消息，并把有效反馈留给下一轮编排。",
+    "displayDescription": "执行期间即时回应学习者消息。",
+    "category": "Teaching & Dialogue",
+    "capabilities": [
+      "dialog.converse"
+    ],
+    "phase": "teaching",
+    "headings": [
+      "学习陪伴"
+    ],
+    "markdown": "---\r\nname: learning-companion\r\ndescription: >-\r\n  在学习任务执行期间快速回应学习者的消息，并把有效反馈留给下一轮编排。\r\nmetadata:\n  category: \"Teaching & Dialogue\"\n  version: 1.0.0\n  display-name: 学习对话\r\n  display-description: 执行期间即时回应学习者消息。\r\n  phase: teaching\r\n  capabilities: dialog.converse\r\n  provider: learning_companion\r\n  parallel-safe: true\r\n  critical-path: true\r\n  blocking: true\r\n  latency-class: interactive\r\n  status-line: 正在回应你的消息…\r\n  ownership: dedicated\r\n---\r\n\r\n# 学习陪伴\r\n\r\n本轮唯一面向学习者发言。读取运行看板，优先简短、诚实地说明当前任务状态，并回应学习者的追问；不要假装产物已好，也不要泄露未提交答案。等待期间用有价值的问题推进对话。\r\n"
+  },
+  {
+    "slug": "learning-report",
+    "name": "learning-report",
+    "displayName": "学习报告",
+    "description": "Write the end-of-goal report from the profile diff and the evidence ledger. Use when a goal is satisfied; every claim must cite evidence that exists.",
+    "displayDescription": "在目标达成时基于档案前后差异和证据账本写报告，每条论断都必须引用真实存在的证据。",
+    "category": "Learner State & Curriculum",
+    "capabilities": [
+      "meta.report"
+    ],
+    "phase": "report",
+    "headings": [
+      "学习报告",
+      "角色",
+      "素材",
+      "规则",
+      "输出契约 `learning-report.v1`",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: learning-report\r\ndescription: >-\r\n  Write the end-of-goal report from the profile diff and the evidence ledger. Use when a goal is\r\n  satisfied; every claim must cite evidence that exists.\r\nlicense: MIT\r\nmetadata:\n  category: \"Learner State & Curriculum\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 学习报告\r\n  display-description: 在目标达成时基于档案前后差异和证据账本写报告，每条论断都必须引用真实存在的证据。\r\n  output-language: zh-CN\r\n  output-contract: learning-report.v1\r\n  execution-mode: synchronous-structured-generation\r\n  phase: report\r\n  critical-path: false\r\n  learner-facing: true\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: background\r\n  capabilities: meta.report\r\n  status-line: 正在整理学习报告…\r\n  provider: pack_report\r\n  ownership: dedicated\r\n---\r\n\r\n# 学习报告\r\n\r\n## 角色\r\n\r\n报告不是总结聊天记录，是把**档案的前后差异**讲清楚：学了什么、证据是什么、还差什么。\r\n\r\n## 素材\r\n\r\n- `decision_trace` 里每一步的 `profile_before` / `profile_after`\r\n- `learning_evidence` 中本次目标涉及的证据行\r\n- 目标栈里该目标的 `expected_outcome`\r\n\r\n## 规则\r\n\r\n1. **每条论断引用 evidence id**。「你已经掌握了拥塞控制」必须挂上具体作答；\r\n   引用不存在的 id 是硬错误。\r\n2. **报告掌握度变化，不报告努力程度**。「你很认真」不是学习结果。\r\n3. **明确写出还没验证的部分**。`evidence_count < 2` 的点写成「尚未充分验证」，\r\n   不要写成「已掌握」。\r\n4. **误区要写清是消解了还是仍在**。消解需要有新的、相反方向的证据支撑。\r\n5. **给出下一步**，且下一步要落到 `learning_profile.next_step` 那种可点击形状，\r\n   不要写成「继续加油」。\r\n6. 中文，简短。三段以内：学到了什么 / 证据 / 下一步。\r\n\r\n## 输出契约 `learning-report.v1`\r\n\r\n```json\r\n{\r\n  \"goal_id\": \"goal_7a1c\",\r\n  \"summary\": \"面向学习者的中文小结\",\r\n  \"mastery_changes\": [\r\n    {\"knowledge_point_id\": \"tcp-congestion\", \"before\": 0.32, \"after\": 0.61,\r\n     \"evidence_ids\": [\"ev_a1b2\", \"ev_c3d4\"]}\r\n  ],\r\n  \"resolved_misconceptions\": [\"把拥塞窗口当成接收窗口\"],\r\n  \"open_misconceptions\": [],\r\n  \"unverified\": [\"fast-retransmit\"],\r\n  \"next_step\": {\"capability\": \"assess.generate\", \"knowledge_point_id\": \"fast-retransmit\",\r\n                \"label\": \"测一测快速重传\", \"rationale\": \"只讲过一次，还没有作答证据\"}\r\n}\r\n```\r\n\r\n## 反模式\r\n\r\n- 复述对话过程。\r\n- 把「看完了课件」当成掌握证据。\r\n- 结尾写一句「继续保持」就算下一步。\r\n"
+  },
+  {
+    "slug": "lesson-intro",
+    "name": "lesson-intro",
+    "displayName": "课程引入",
+    "description": "Directly create a warm, self-contained Chinese HTML lesson opening from the supplied topic and curriculum context. Use when a learner needs a compact scene, puzzle, misconception, or question that makes a target concept worth learning; do not browse the web or aggregate search results.",
+    "displayDescription": "基于已有课程上下文直接生成自然有趣的课程开场 HTML，不联网搜索或聚合检索结果。",
+    "category": "Content & Visualization",
+    "capabilities": [
+      "content.lesson_intro"
+    ],
+    "phase": "prepare",
+    "headings": [
+      "Lesson Opener",
+      "Role",
+      "Input boundary",
+      "Output contract",
+      "Direct generation workflow",
+      "Editorial autonomy",
+      "Single-file HTML design",
+      "HTML firewall",
+      "Quality gates",
+      "Result shape"
+    ],
+    "markdown": "---\r\nname: lesson-intro\r\ndescription: >-\r\n  Directly create a warm, self-contained Chinese HTML lesson opening from the supplied topic and\r\n  curriculum context. Use when a learner needs a compact scene, puzzle, misconception, or question\r\n  that makes a target concept worth learning; do not browse the web or aggregate search results.\r\nlicense: MIT\r\nmetadata:\n  category: \"Content & Visualization\"\n  author: LingXi-Org\n  version: 4.2.0\r\n  display-name: 课程引入\r\n  display-description: 基于已有课程上下文直接生成自然有趣的课程开场 HTML，不联网搜索或聚合检索结果。\r\n  output-language: zh-CN\r\n  output-contract: lesson-intro-html.v1\r\n  execution-mode: direct-editorial-html\r\n  phase: prepare\r\n  critical-path: false\r\n  learner-facing: artifact\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: background\r\n  blocking: false\r\n  capabilities: content.lesson_intro\r\n  status-line: 正在准备课程引入…\r\n  provider: lesson_intro\r\n  ownership: dedicated\r\n  eval-suite: lesson-intro-v1\r\n---\r\n\r\n# Lesson Opener\r\n\r\n## Role\r\n\r\nCreate one small, delightful learning page—not a research report, dashboard, debug log, candidate\r\nset, or agent handoff. This preparation artifact may run in parallel with\r\n`interactive-lecture-deck` from the same curriculum context; do not wait for the deck or invoke\r\nanother teaching Skill. The learner should see a concrete scene, feel a small moment of surprise,\r\nand leave with one question that makes the target concept worth learning.\r\n\r\n## Input boundary\r\n\r\nUse the supplied topic, learning objective, course context, learner level, and caller constraints.\r\nThey are the complete content boundary for the opening. Do not browse, call web search/fetch tools,\r\ninspect webpages, collect URLs, aggregate external results, or create a source/claim ledger. Do not\r\ninvent a specific historical event, quotation, statistic, current fact, named anecdote, or dialogue.\r\nWhen the supplied context cannot support a factual hook, use a clearly framed observation, puzzle,\r\ncounterfactual, or thought experiment instead. Keep the claim modest and let the lesson answer the\r\nquestion later.\r\n\r\nRead `references/input-grounding.md` for the direct-generation evidence boundary,\r\n`references/visual-contract.md` before authoring any HTML, and `references/hook-patterns.md` only\r\nwhen choosing a hook pattern. `references/visual-contract.md` is the shared visual baseline adapted\r\nfrom `interactive-visual-explainer` and `interactive-lecture-deck`.\r\n\r\n## Output contract\r\n\r\nReturn one complete, self-contained HTML document. If the host accepts plain artifacts, return the\r\nHTML directly. If the host requires an envelope, use the smallest useful JSON object with an `html`\r\nstring and optional `topic`, `status`, `warnings`, or `structured_data`. The status, when present,\r\nis `ok`; lack of external research is never a reason to delay or fail a usable introduction.\r\n\r\n`structured_data` may contain private input, editorial, rendering, or quality notes, but never search\r\nresults, URLs, source records, claims, query logs, or aggregated evidence. Never copy machine\r\nmetadata into the page.\r\n\r\n## Direct generation workflow\r\n\r\n1. Read the input topic, objective, context, learner level, duration, and avoid-list. If context is\r\n   thin, choose a low-risk conceptual hook rather than trying to fill the gap with outside facts.\r\n2. Choose one hook that can be written immediately: a puzzle, failure pattern, everyday observation,\r\n   intuition trap, definition tension, scale shift, or a context-supplied scene. Do not generate or\r\n   compare a candidate list.\r\n3. Hold the private learning promise: “After this opening, the learner should want to know ___.”\r\n   Keep it private or in optional machine metadata.\r\n4. Draft a compact arc: scene or observation → surprising turn → one concrete question → natural\r\n   bridge into the target concept. Keep the bridge honest: the page is an invitation, not the full\r\n   lesson.\r\n5. Build the page around one dominant, concept-specific figure. Prefer a relation diagram or\r\n   comparison with inline SVG over a decorative illustration or a stack of cards.\r\n6. Apply the shared visual contract: canonical tokens, serif display title, sans body, hairline\r\n   rules, no gradients/shadows/glass, at most three semantic colors, and a deliberate dark mode.\r\n7. Run the HTML quality gate, the shared palette checker when colors change, and\r\n   `scripts/validate_output.py`.\r\n\r\nWhen artifact staging is available, write the complete `lesson-intro.html` as soon as the page is\r\nusable, then validate and refine it. Do not postpone the first artifact write until after a long\r\nreasoning pass: the host may promote the staged page if generation is interrupted. If a later\r\nrevision fails validation, keep the last valid staged page rather than replacing it with an\r\nincomplete draft.\r\n\r\n## Editorial autonomy\r\n\r\n- Prefer a specific, understandable moment over generic “this topic is important” language.\r\n- Prefer a conclusion-shaped title, a large visual, and a short caption over multiple small content\r\n  cards. The page should feel closer to an editorial opening slide than a dashboard.\r\n- Use conversational Simplified Chinese, short paragraphs, concrete verbs, and restrained warmth.\r\n- Match the level: novices get a concrete scene and one tension; advanced learners may get a tradeoff,\r\n  boundary condition, or competing model already supported by the input.\r\n- Do not turn the opening into a mini-lecture, fact list, biography, news summary, or source digest.\r\n- Use only one central question. Every visible beat must create that question, sharpen its stakes, or\r\n  point toward the target concept.\r\n\r\n## Single-file HTML design\r\n\r\nFollow `references/visual-contract.md` and then `references/html-design.md` for the visual craft\r\npass. The essential constraints are:\r\n\r\n- return one complete `<!doctype html>` document with `<html lang=\"zh-CN\">`, UTF-8 metadata, a\r\n  meaningful `<title>`, and a real `<body>`;\r\n- inline all CSS and JavaScript; do not use external fonts, stylesheets, scripts, images, embeds,\r\n  analytics, or network requests;\r\n- make the page readable on a phone and a desktop, with visible focus states and a\r\n  `prefers-reduced-motion` fallback;\r\n- use semantic headings and landmarks, one `h1`, at most two `h2` headings, short readable\r\n  paragraphs, and at least one `figure` with a `figcaption`;\r\n- make the dominant visual an inline SVG or CSS diagram that is already meaningful in the first\r\n  frame; for SVG use a `viewBox` width of `680` and classes `t`, `ts`, `th`, or `tn` on every\r\n  `<text>` element;\r\n- keep the visible page compact: normally 180–420 Chinese characters and a 45–120 second read,\r\n  but shorten or extend it when the idea genuinely calls for it;\r\n- prefer a static page. Add at most one restrained interaction—such as revealing a hint or gently\r\n  changing a diagram state—only when it clarifies the question;\r\n- do not put URLs, search notes, source lists, scores, or diagnostic labels in the page;\r\n- do not hide internal parameters in HTML comments, `data-*` attributes, or script variables.\r\n\r\n## HTML firewall\r\n\r\nThe visible HTML must contain only finished learner-facing content. Do not include task IDs, mode\r\nnames, schema versions, JSON, YAML, field names, hook lists, candidate lists, scores, rankings,\r\nconfidence values, evidence IDs, source records, query terms, provider names, tool names, budgets,\r\nretries, runtime limits, internal warnings, debugging notes, implementation notes, orchestration\r\nnotes, or development notes. Do not include “作为 AI”“本 Agent”“本 Skill”“系统将”“根据任务”\r\nor “以下是生成结果”等 meta language. Do not add unsupported facts, fabricated dialogue, invented\r\nquotes, or confident wording for disputed claims.\r\n\r\n## Quality gates\r\n\r\nBefore returning:\r\n\r\n1. Check that the page uses only the supplied context or clearly framed non-factual imagination;\r\n   never compensate for missing context with web browsing or result aggregation.\r\n2. Check that the page has no external asset, network dependency, hidden metadata, or internal\r\n   implementation text and remains useful with JavaScript disabled.\r\n3. Check that the page follows `visual-contract.md`: no gradients/shadows/blur, no arbitrary colors,\r\n   no oversized radii, no decorative hero, no card grid, and a dominant explanatory visual.\r\n4. Check that the opening creates curiosity, the target concept is necessary, and the ending hands\r\n   off cleanly to the lesson.\r\n5. Check that the page contains one main question, a concrete scene or observation, and no candidate\r\n   comparison or research summary.\r\n6. Validate the HTML itself, or the optional minimal envelope, with `scripts/validate_output.py`.\r\n\r\n## Result shape\r\n\r\nReturn one self-contained HTML document. If an envelope is required by the host, `html` is the only\r\nrequired field; `topic`, `status`, `warnings`, and direct-generation metadata are optional\r\nconveniences. All visible prose and the HTML page must be Simplified Chinese. Keep formulas, code,\r\nidentifiers, and schema keys in their technical form only when they are part of the lesson content\r\nor private machine metadata.\r\n"
+  },
+  {
+    "slug": "negotiation",
+    "name": "negotiation",
+    "displayName": "教学协商",
+    "description": "Write the one-sentence negotiation a learner sees when the system intends to do something other than what they literally asked for. Use whenever the ranked plan deviates from the stated request; the system may deviate, but never silently.",
+    "displayDescription": "当系统打算偏离用户字面要求时，写出那一句协商话术。可以不照做，但不能不打招呼。",
+    "category": "Teaching & Dialogue",
+    "capabilities": [
+      "dialog.negotiate"
+    ],
+    "phase": "teach",
+    "headings": [
+      "教学协商",
+      "角色",
+      "一句协商包含什么",
+      "模板",
+      "示例",
+      "规则",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: negotiation\r\ndescription: >-\r\n  Write the one-sentence negotiation a learner sees when the system intends to do something other\r\n  than what they literally asked for. Use whenever the ranked plan deviates from the stated\r\n  request; the system may deviate, but never silently.\r\nlicense: MIT\r\nmetadata:\n  category: \"Teaching & Dialogue\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 教学协商\r\n  display-description: 当系统打算偏离用户字面要求时，写出那一句协商话术。可以不照做，但不能不打招呼。\r\n  output-language: zh-CN\r\n  execution-mode: shared-contract\r\n  phase: teach\r\n  critical-path: true\r\n  learner-facing: true\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  capabilities: dialog.negotiate\r\n  status-line: 正在和你协商下一步…\r\n  provider: negotiator\r\n  ownership: dedicated\r\n---\r\n\r\n# 教学协商\r\n\r\n## 角色\r\n\r\n系统被允许不按用户字面要求执行——例如用户要讲「TCP 拥塞控制」，但档案显示前置的\r\n「滑动窗口」`mastery=0.21`，先补前置的学习收益更高。**允许偏离，但必须先协商一句再做。**\r\n护栏会拒绝任何\"偏离目标但没有协商话术\"的计划。\r\n\r\n## 一句协商包含什么\r\n\r\n1. **承认原始请求**——让学习者知道没有被忽略。\r\n2. **给出偏离的具体理由**——引用档案里的事实，不是\"为了你好\"。\r\n3. **说明打算先做什么，要花多久**。\r\n4. **留一个明确的拒绝出口**——学习者可以坚持原计划。\r\n\r\n## 模板\r\n\r\n> 你想学的是{原目标}。我看到{前置知识}你目前只做对过 {n} 次里的 {k} 次，\r\n> 直接讲{原目标}大概率会卡在{具体卡点}。我建议先用 {时长} 把{前置知识}过一遍再回来——\r\n> 你也可以让我直接讲{原目标}，我就按你说的来。\r\n\r\n## 示例\r\n\r\n> 你想学的是 TCP 拥塞控制。我看到「滑动窗口」你目前只做对过 3 次里的 1 次，\r\n> 而拥塞窗口的推导要一直用到发送窗口的边界，直接讲大概率会卡在 cwnd 和 rwnd 的区别上。\r\n> 我建议先用 8 分钟把滑动窗口过一遍再回来——你也可以让我直接讲拥塞控制，我就按你说的来。\r\n\r\n## 规则\r\n\r\n- **一句到两句，不要一段**。协商不是讲课。\r\n- **引用具体数字**，\"你基础不太好\"不是理由，\"3 次里对 1 次\"是。\r\n- **不要道歉式措辞**（\"不好意思打断一下\"）；这是教学判断，不是冒犯。\r\n- **不要既协商又直接开始做**。协商的那一轮 `awaits_user=true`，等回复。\r\n- 学习者坚持原计划时，照做，并把这次偏好记成 `self_report` 证据。\r\n\r\n## 反模式\r\n\r\n- 静默改计划（护栏会拒绝）。\r\n- 用\"根据我的分析\"代替具体档案事实。\r\n- 把协商写成选择题清单，让学习者做规划工作。\r\n"
+  },
+  {
+    "slug": "orchestrator-policy",
+    "name": "orchestrator-policy",
+    "displayName": "学习计划决策",
+    "description": "Evaluate learning utility and choose the next actions in one model decision. The contract keeps utility evaluation and plan orchestration as two separately auditable skills while exposing one fast runtime control node.",
+    "displayDescription": "在一个极速模型节点中分别完成学习效用评估与学习计划编排；保留两个可审计技能语义，只谈能力，不谈 agent 名。",
+    "category": "Orchestration & Runtime",
+    "capabilities": [
+      "orchestrator-policy"
+    ],
+    "phase": "runtime",
+    "headings": [
+      "学习计划决策",
+      "角色",
+      "你会拿到什么",
+      "你要输出什么 `orchestration-plan.v1`",
+      "规则",
+      "排序直觉",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: orchestrator-policy\r\ndescription: >-\r\n  Evaluate learning utility and choose the next actions in one model decision. The contract keeps\r\n  utility evaluation and plan orchestration as two separately auditable skills while exposing one\r\n  fast runtime control node.\r\nlicense: MIT\r\nmetadata:\n  category: \"Orchestration & Runtime\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 学习计划决策\r\n  status-line: 正在评估学习效用并生成下一步计划…\r\n  display-description: 在一个极速模型节点中分别完成学习效用评估与学习计划编排；保留两个可审计技能语义，只谈能力，不谈 agent 名。\r\n  output-language: zh-CN\r\n  output-contract: orchestration-plan.v1\r\n  execution-mode: shared-contract\r\n  phase: runtime\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  ownership: shared\r\n---\r\n\r\n# 学习计划决策\r\n\r\n本技能由两个独立、可审计的子技能组成，但在 Runtime Loop 中使用一次模型调用完成：\r\n\r\n1. **学习效用评估**：逐项输出 `gain`、`utility` 和中文理由，体现学习收益与成本权衡。\r\n2. **学习计划编排**：使用上述评分选择任务、判断真实依赖并生成分层计划。\r\n\r\n两者不得拆成串行模型调用。候选任务没有真实数据依赖时，`depends_on` 必须为空，\r\n让运行时把它们放入同一层并行执行。\r\n\r\n## 角色\r\n\r\n每一轮重新决策，而不是一次性分流。这个 skill 描述 orchestrator 在拿到\r\n**已由宿主确定性打分的候选集**之后要做什么。\r\n\r\n宿主已经算好了 `expected_learning_gain / cost`。模型的工作是**在这个受限列表里挑选和排序**，\r\n并说明理由——不是自己发明动作。列表之外的能力一律不可选。\r\n\r\n## 你会拿到什么\r\n\r\n```json\r\n{\r\n  \"goal\": { \"...goal.v1...\" },\r\n  \"profile\": { \"target\": {...}, \"prerequisites\": [...], \"due_for_review\": [...] },\r\n  \"budget\": {\"steps_used\": 3, \"max_steps\": 24, \"replans_used\": 1, \"max_replans\": 6,\r\n             \"heavy_artifacts_used\": 1, \"max_heavy_artifacts\": 6},\r\n  \"candidates\": [\r\n    {\"capability\": \"graph.prerequisite\", \"utility\": 0.72, \"gain\": 0.55, \"cost\": 0.76,\r\n     \"reason\": \"尚未分析该知识点的前置依赖\", \"skill_id\": \"prerequisite-analyzer\"},\r\n    {\"capability\": \"content.deck\", \"utility\": 0.31, \"gain\": 0.62, \"cost\": 2.0,\r\n     \"reason\": \"缺少系统讲解材料\", \"skill_id\": \"interactive-lecture-deck\"}\r\n  ]\r\n}\r\n```\r\n\r\n## 你要输出什么 `orchestration-plan.v1`\r\n\r\n```json\r\n{\r\n  \"reasoning\": \"判断理由，一到三句\",\r\n  \"hypotheses\": [\"当前假设，例如：学习者卡在窗口概念而不是公式\"],\r\n  \"tasks\": [\r\n    {\"id\": \"t1\", \"capability\": \"graph.prerequisite\", \"inputs\": {},\r\n     \"depends_on\": [],\r\n     \"done_when\": {\"kind\": \"evidence_observed\", \"signal\": \"error_pattern\"},\r\n     \"rationale\": \"可展示给学习者的一句话\",\r\n     \"expected_learning_gain\": 0.55}\r\n  ],\r\n  \"goal_satisfied_when\": {\"kind\": \"profile_reaches\",\r\n                          \"knowledge_point_id\": \"tcp-congestion\", \"mastery\": 0.7},\r\n  \"awaits_user\": false,\r\n  \"negotiation\": null\r\n}\r\n```\r\n\r\n## 规则\r\n\r\n1. **一轮最多 6 个任务**。计划长了就不是计划，是猜测；未达成会重规划。\r\n2. **每个任务必须有 `done_when`，而且必须可机器判定**。\r\n   「agent 跑完」不是完成条件。可用类型：`artifact_exists` / `artifact_valid` /\r\n   `evidence_observed` / `profile_reaches` / `user_replied` / `quiz_graded` /\r\n   `all_of` / `any_of`。\r\n3. **每个任务必须有 `rationale`，且要能直接展示给学习者**。空 rationale 的计划会被护栏拒绝。\r\n4. **偏离用户字面要求时必须写 `negotiation` 并置 `awaits_user=true`**。\r\n   护栏会拒绝「偏离但没协商」的计划。\r\n5. **不要为了用满预算而加任务**。剩余步数不是必须花掉的。\r\n6. **同一知识点的相关产物应在同一轮一起下发**；彼此无真实数据依赖时 `depends_on` 必须为空。\r\n7. 输出 `holds` 与 `delivery_order`；`delivery_order` 是学生学习顺序，不是生成顺序。\r\n7. **不要写 agent 名**。`capability` 是唯一的选择维度；谁来执行由注册表在运行时解析。\r\n\r\n## 排序直觉\r\n\r\n宿主的 utility 已经编码了主要规则（前置未满足优先补前置、证据太薄优先测、\r\n产物缺失优先生成、逾期高优先复习）。你可以在下面两种情况下偏离 argmax，**并说明原因**：\r\n\r\n- 候选之间 utility 差距 < 0.05 时，选对学习者当下更连贯的那个。\r\n- 学习者刚明确拒绝过某个方向时，即使 utility 最高也跳过它。\r\n\r\n其它情况请跟随打分。**不要用「我觉得先讲概念更自然」覆盖有数据支撑的排序。**\r\n\r\n## 反模式\r\n\r\n- 输出一个固定的四步流程（引入 → 课件 → 出题 → 讲解），不管档案是什么样。\r\n- 选择列表之外的能力。\r\n- `done_when` 写成散文（「直到学生理解为止」）。\r\n- 一轮塞 6 个任务然后指望重规划来收拾。\r\n"
+  },
+  {
+    "slug": "plan-presenter",
+    "name": "plan-presenter",
+    "displayName": "执行计划发布",
+    "description": "将已验证的 Runtime 编排计划即时投影为学习者可见的执行计划列表。",
+    "displayDescription": "实时更新聊天中的下一步学习计划，不调用模型。",
+    "category": "Orchestration & Runtime",
+    "capabilities": [
+      "plan.present"
+    ],
+    "phase": "runtime",
+    "headings": [
+      "执行计划发布"
+    ],
+    "markdown": "---\r\nname: plan-presenter\r\ndescription: >-\r\n  将已验证的 Runtime 编排计划即时投影为学习者可见的执行计划列表。\r\nmetadata:\n  category: \"Orchestration & Runtime\"\n  version: 1.0.0\n  display-name: 执行计划发布\r\n  display-description: 实时更新聊天中的下一步学习计划，不调用模型。\r\n  phase: runtime\r\n  capabilities: plan.present\r\n  provider: plan_presenter\r\n  parallel-safe: true\r\n  critical-path: false\r\n  blocking: false\r\n  latency-class: interactive\r\n  status-line: 正在更新执行计划…\r\n  learner-facing: true\r\n  ownership: dedicated\r\n---\r\n\r\n# 执行计划发布\r\n\r\n只发布宿主已经验证过的计划项和状态，不重新解释目标，不调用模型，也不改变编排决策。\r\n"
+  },
+  {
+    "slug": "prerequisite-analyzer",
+    "name": "prerequisite-analyzer",
+    "displayName": "前置依赖分析",
+    "description": "Determine what a target knowledge point rests on and which of those prerequisites the learner has not met yet. Use before teaching anything non-trivial; the result decides whether the runtime teaches the request or the thing under it.",
+    "displayDescription": "判断目标知识点依赖什么、学习者还差哪一层，决定先讲请求本身还是先补下面那一层。",
+    "category": "Learner State & Curriculum",
+    "capabilities": [
+      "graph.prerequisite"
+    ],
+    "phase": "learner-model",
+    "headings": [
+      "前置依赖分析",
+      "角色",
+      "输入",
+      "判定规则",
+      "输出契约 `prerequisite-analysis-result.v1`",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: prerequisite-analyzer\r\ndescription: >-\r\n  Determine what a target knowledge point rests on and which of those prerequisites the learner\r\n  has not met yet. Use before teaching anything non-trivial; the result decides whether the\r\n  runtime teaches the request or the thing under it.\r\nlicense: MIT\r\nmetadata:\n  category: \"Learner State & Curriculum\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 前置依赖分析\r\n  display-description: 判断目标知识点依赖什么、学习者还差哪一层，决定先讲请求本身还是先补下面那一层。\r\n  output-language: zh-CN\r\n  output-contract: prerequisite-analysis-result.v1\r\n  execution-mode: synchronous-structured-generation\r\n  phase: learner-model\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  capabilities: graph.prerequisite\r\n  status-line: 正在分析前置知识…\r\n  provider: prerequisite_analyzer\r\n  ownership: dedicated\r\n---\r\n\r\n# 前置依赖分析\r\n\r\n## 角色\r\n\r\n「先补前置知识」是运行时唯一被允许违背用户字面要求的教学动作。这个判断必须有依据，\r\n所以这一步要产出**具体的、可核查的依赖结论**，而不是「基础不牢」。\r\n\r\n## 输入\r\n\r\n- 目标知识点 id 与标签\r\n- 该点及候选前置点的 `learning_profile` 行（含 `mastery`、`evidence_count`、`misconceptions`）\r\n- 可用的课程知识图谱片段（若存在）\r\n\r\n## 判定规则\r\n\r\n1. **只列真正的推导依赖**。「学 TCP 之前最好懂点网络」不是依赖；「推导 cwnd 变化要用到发送窗口\r\n   的边界」是依赖。一个前置点必须能指出它在目标推导里被用在哪一步。\r\n2. **深度最多两层**。再往下就不是教学决策而是课程重排。\r\n3. **前置是否满足看证据，不看时间**：`mastery >= 0.6` 且 `evidence_count >= 2` 才算满足；\r\n   `evidence_count < 2` 时无论 `mastery` 多高都标 `unverified`，而不是 `met`。\r\n4. **误区优先于薄弱**：前置点带未消解 `misconceptions` 时，即使 `mastery` 达标也标 `blocked`。\r\n5. 找不到可靠依赖就返回空列表并说明，不要编一条出来凑数。\r\n\r\n## 输出契约 `prerequisite-analysis-result.v1`\r\n\r\n```json\r\n{\r\n  \"target\": \"tcp-congestion\",\r\n  \"prerequisites\": [\r\n    {\"id\": \"sliding-window\", \"label\": \"滑动窗口\", \"status\": \"blocked\",\r\n     \"used_for\": \"推导 cwnd 与 rwnd 的取小关系\",\r\n     \"mastery\": 0.21, \"evidence_count\": 3,\r\n     \"evidence_ids\": [\"ev_a1b2\", \"ev_c3d4\"]}\r\n  ],\r\n  \"verdict\": \"teach_prerequisite_first\",\r\n  \"blocking_prerequisite\": \"sliding-window\",\r\n  \"rationale\": \"拥塞窗口的每一步推导都要用到发送窗口边界，而该点 3 次作答只对 1 次。\",\r\n  \"warnings\": []\r\n}\r\n```\r\n\r\n`status` 只能是 `met` / `unverified` / `blocked`。\r\n`verdict` 只能是 `teach_target` / `teach_prerequisite_first` / `verify_prerequisite_first`。\r\n\r\n## 反模式\r\n\r\n- 把课程目录顺序当成依赖关系。\r\n- 列出五六个前置点——那是大纲，不是决策。\r\n- 以「没有数据」为由判定前置未满足；没有数据应当先测（`verify_prerequisite_first`）。\r\n"
+  },
+  {
+    "slug": "product-page-component-rewriter",
+    "name": "product-page-component-rewriter",
+    "displayName": "产品页组件改写",
+    "description": "在 LingxiLearn 项目中开发或改写产品主页及附属介绍页，只复用和改写现有 React/Next.js 组件，完成文案替换、指定组件替换/改写和静态资源替换指导；当用户通过浏览器控制台选中元素、提供页面元素或要求定位某个产品页组件时使用。",
+    "displayDescription": "在 LingxiLearn 项目中开发或改写产品主页及附属介绍页，只复用和改写现有 React/Next.js 组件，完成文案替换、指定组件替换/改写和静态资源替换指导；当用户通过浏览器控制台选中元素、提供页面元素或要求定位某个产品页组件时使用。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "product-page-component-rewriter"
+    ],
+    "headings": [
+      "产品页组件改写",
+      "目标与硬约束",
+      "工作流",
+      "控制台选中元素协议",
+      "资源替换规则",
+      "交付检查"
+    ],
+    "markdown": "---\r\nname: product-page-component-rewriter\r\ndescription: 在 LingxiLearn 项目中开发或改写产品主页及附属介绍页，只复用和改写现有 React/Next.js 组件，完成文案替换、指定组件替换/改写和静态资源替换指导；当用户通过浏览器控制台选中元素、提供页面元素或要求定位某个产品页组件时使用。\nmetadata:\n  category: \"Quality & Utilities\"\n---\n\r\n# 产品页组件改写\r\n\r\n## 目标与硬约束\r\n\r\n在 `web/app/(landing)` 范围内完成主页、产品能力页、解决方案页、企业页、集成页、内容页及法律/介绍页的改写。优先修改页面配置、数据对象、现有组件 props 和已有静态资源引用；禁止新增页面级 CSS、CSS module、Tailwind 样式、inline style 或从零绘制新的视觉组件。若需求无法由现有组件承载，先说明缺口并请求用户确认，不要偷偷手写样式。\r\n\r\n## 工作流\r\n\r\n1. 读取 [组件目录](references/component-catalog.md)，并用 `rg` 搜索用户给出的文本、路由、组件名、DOM 文本或资源 URL。\r\n2. 将浏览器控制台选中的元素映射到源码：优先使用 `data-*`、`id`、可见文本、`href/src`、React 组件命名和父级结构；再检查页面入口及配置对象。不要只凭 CSS class 猜测。\r\n3. 阅读命中的页面入口、组件实现、类型定义和相邻 `index.ts` 导出，确认修改属于共享组件还是页面专属配置。共享组件改动必须检查所有调用方。\r\n4. 先复用已存在的页面模板或变体：主页用 `Landing` 组件组合；能力/解决方案页用 `SolutionsPageConfig`；法律/长文介绍页用 `ProsePage`；未接入占位页沿用 `CapabilityPage`。静态资源优先替换已有 `web/public` 文件或引用路径，不生成新视觉样式。\r\n5. 用最小补丁实施：文案集中在 config/constants/content；组件改写保留既有 className、布局、动画、响应式和无障碍语义；不要为了改文字复制一套组件。\r\n6. 验证 `rg` 无旧文案残留（除明确保留的技术专名），运行 `bun run type-check` 与相关测试；必要时运行 `bun run lint:check`。报告修改文件、复用的组件、未能由现有组件实现的部分。\r\n\r\n## 控制台选中元素协议\r\n\r\n用户可以发送 DevTools 选中的 `$0` 信息、元素 HTML、可见文本、页面 URL 或截图。按以下顺序定位：\r\n\r\n- 页面：由 URL pathname 映射 `web/app/(landing)/*/page.tsx`，再追到同目录的实现文件。\r\n- 组件：由可见文案/链接/图片源搜索，沿 JSX 父子树和 import 路径向上追到命名组件。\r\n- 重复元素：结合父级语义、数组数据项、`aria-label`、链接 href 和相邻文本确认索引，不修改所有实例除非用户明确要求。\r\n- 仅有运行时 class：把 class 当作线索，必须回到 JSX/配置/组件源代码确认；不要直接改生成的 DOM 或构建产物。\r\n\r\n## 资源替换规则\r\n\r\n先盘点 `web/public` 和现有 import 的静态资源，判断是替换同尺寸资源、修改既有资源路径，还是仅提供用户替换指导。若用户尚未提供新资源，不伪造资源；给出准确的目标文件、引用点、尺寸/比例和命名要求。保留 `next/image`、预加载、alt 文本和已有 fallback 行为。\r\n\r\n## 交付检查\r\n\r\n确认：没有新增样式文件或手写样式；所有新文案落在已有内容入口；共享组件的调用方未被意外破坏；页面路由、SEO/JSON-LD、CTA 链接、图片 alt 和移动端结构仍有效；类型检查通过。对于未接入页面，不把占位 `CapabilityPage` 误当成完整产品页。\r\n"
+  },
+  {
+    "slug": "profile-reader",
+    "name": "profile-reader",
+    "displayName": "学习档案读取",
+    "description": "Read a learner's learning_profile rows and project them into the compact view a teaching or planning step actually needs. Use before any decision that depends on what the learner already knows; never use it to write the profile.",
+    "displayDescription": "把 learning_profile 投影成教学或规划步骤真正需要的紧凑视图，只读不写。",
+    "category": "Learner State & Curriculum",
+    "capabilities": [
+      "profile-reader"
+    ],
+    "phase": "shared",
+    "headings": [
+      "学习档案读取",
+      "角色",
+      "读什么",
+      "投影规则",
+      "输出形状",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: profile-reader\r\ndescription: >-\r\n  Read a learner's learning_profile rows and project them into the compact view a teaching or\r\n  planning step actually needs. Use before any decision that depends on what the learner already\r\n  knows; never use it to write the profile.\r\nlicense: MIT\r\nmetadata:\n  category: \"Learner State & Curriculum\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 学习档案读取\r\n  status-line: 正在读取你的学习档案…\r\n  display-description: 把 learning_profile 投影成教学或规划步骤真正需要的紧凑视图，只读不写。\r\n  output-language: zh-CN\r\n  execution-mode: shared-contract\r\n  phase: shared\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  provider: \r\n  ownership: shared\r\n---\r\n\r\n# 学习档案读取\r\n\r\n## 角色\r\n\r\n`learning_profile` 是系统唯一的学习者真相源。任何 agent 都可以读它，**没有任何 agent 可以写它**：\r\n写入只经由 `state/profile_writer.py`，且必须引用 `learning_evidence` 行。这个 skill 描述\"怎么读\"。\r\n\r\n## 读什么\r\n\r\n一行档案 = 一个用户 × 一个知识点。字段分两层：\r\n\r\n| 层 | 字段 | 用途 |\r\n| --- | --- | --- |\r\n| 用户列 | `knowledge_point` `mastery` `learning_state` `progress` `my_questions` `recent_performance` `last_studied_at` `review_due_at` `next_step` | 可以直接展示给学习者 |\r\n| 系统列 | `confidence` `evidence_count` `misconceptions` `prerequisites` `difficulty` `review_priority` `stability` `source_agent` `revision` `override_flag` | 供规划与排序使用，不直接展示 |\r\n\r\n## 投影规则\r\n\r\n1. **只取当前目标涉及的知识点，外加它们的 `prerequisites` 一层**。整表投影会把无关知识点\r\n   带进模型上下文，既贵又会稀释注意力。\r\n2. **`mastery` 必须和 `confidence`、`evidence_count` 一起读**。`mastery=0.8` 而\r\n   `evidence_count=1` 不是\"掌握了\"，是\"只看过一次\"。把它当作已掌握是最常见的误判。\r\n3. **`override_flag=true` 的行，`mastery` / `learning_state` / `progress` / `difficulty` /\r\n   `next_step` 是学习者自己写的**。可以引用，不要在推理里把它当作系统观测。\r\n4. **`review_due_at` 过期不等于\"忘了\"**，只等于\"该验证了\"。结论要靠新证据，不靠时间。\r\n5. `misconceptions` 非空时，优先针对误区讲解，而不是重复原讲解。\r\n\r\n## 输出形状\r\n\r\n投影结果建议压成下面这种最小结构再进模型：\r\n\r\n```json\r\n{\r\n  \"target\": {\"id\": \"tcp-congestion\", \"mastery\": 0.32, \"state\": \"emerging\",\r\n             \"evidence_count\": 3, \"confidence\": 0.6, \"misconceptions\": [\"把拥塞窗口当成接收窗口\"]},\r\n  \"prerequisites\": [{\"id\": \"sliding-window\", \"mastery\": 0.21, \"state\": \"unknown\", \"evidence_count\": 0}],\r\n  \"due_for_review\": [{\"id\": \"three-way-handshake\", \"review_priority\": 0.81}]\r\n}\r\n```\r\n\r\n## 反模式\r\n\r\n- 把整张档案表塞进 prompt。\r\n- 只读 `mastery`，忽略 `confidence` 和 `evidence_count`。\r\n- 读完之后直接改档案（任何形式的写入都会被 `tests/test_profile_write_guard.py` 拦下）。\r\n- 用自然语言把档案转述给下一个 agent；下一个 agent 自己读表。\r\n"
+  },
+  {
+    "slug": "quiz-generator",
+    "name": "quiz-generator",
+    "displayName": "知识点测评生成",
+    "description": "Generate a compact, evidence-grounded formative quiz from taught lesson content to assess understanding and reveal misconceptions.",
+    "displayDescription": "基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。",
+    "category": "Assessment & Practice",
+    "capabilities": [
+      "assess.generate"
+    ],
+    "phase": "assess",
+    "headings": [
+      "Quiz Builder",
+      "目标",
+      "输入与输出",
+      "设计原则",
+      "工作流程",
+      "证据不足与冲突",
+      "公开快照"
+    ],
+    "markdown": "---\r\nname: quiz-generator\r\ndescription: >-\r\n  Generate a compact, evidence-grounded formative quiz from taught lesson content to assess understanding and reveal misconceptions.\r\nlicense: MIT\r\nmetadata:\n  category: \"Assessment & Practice\"\n  author: LingXi-Org\n  version: 1.1.0\r\n  display-name: 知识点测评生成\r\n  display-description: 基于已讲授的课程内容生成紧凑、可判分且能识别理解误区的形成性测评。\r\n  output-language: zh-CN\r\n  output-contract: quiz-generation-result.v1\r\n  execution-mode: synchronous-structured-generation\r\n  phase: assess\r\n  critical-path: false\r\n  learner-facing: artifact\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: background\r\n  capabilities: assess.generate\r\n  status-line: 正在准备一道检测题…\r\n  provider: quiz_generator\r\n  ownership: dedicated\r\n  eval-suite: quiz-generator-v1\r\n---\r\n\r\n# Quiz Builder\r\n\r\n## 目标\r\n\r\n把已经讲授的知识点转化为一组短小、有诊断价值的形成性测评。它负责一次性的小型测评集；\r\n下一回合的单个检索/迁移任务由 `retrieval-practice-builder` 负责。默认把本 Skill 作为可预取、可丢弃\r\n的评测 artifact，不阻塞 `adaptive-pedagogy` 的即时回答，也不承担 assessor 或 learner-facing\r\n辅导职责。测评不是第二篇讲义，也不是题库堆砌；它要帮助学习者暴露理解断点，帮助教师知道\r\n下一步该补哪里。\r\n\r\n默认一次生成 3–4 道题：先检查核心概念，再辨析一个有依据的误区，然后视材料质量加入应用、\r\n预测、解释或迁移题。材料只支持一个可靠问题时，生成更少的题；不要为了凑齐题型而编造难题。\r\n\r\n## 输入与输出\r\n\r\n读取 `references/quiz-generation-input.schema.json`。输入应包含知识点意图和已讲授的交互课件；\r\n课程引入可以是单文件 HTML、最小 JSON envelope，或缺省。把上游材料视为证据边界，不修改它，\r\n也不要默认联网补课。\r\n\r\n返回 `quiz-generation-result.v1`。题干、选项、说明、关键词和假设都使用简体中文；协议字段、\r\n题目 ID 和枚举值保持技术形式。完整结果供内部判分使用；公开给学习者前，使用\r\n`scripts/quiz_contract.py sanitize` 删除 `answer`、`explanation`、`keywords` 和 `assumptions`。\r\n\r\n## 设计原则\r\n\r\n- 测理解，不测未讲授的冷知识；每个正确答案都必须能在输入材料中找到依据。\r\n- 一题只做一个主要判断。题干自包含，不依赖“上一页”“第 3 张幻灯片”或隐藏图形。\r\n- 干扰项来自真实近错：反转因果、混淆邻近概念、漏掉必要条件、越过适用边界或把局部规律过度泛化。\r\n- 单选题应有且只有一个可辩护答案；多选题只有在确实存在多个正确条件时使用。\r\n- 选项保持相近的语法、长度和具体程度，打散正确选项位置，不用“以上都对/以上都不对”。\r\n- 简答题通常要求 1–4 句，用概念与关系评分，不依赖逐字复述。\r\n- 难度来自推理距离，不来自晦涩措辞或额外知识。材料不足时宁可少出一道题。\r\n- 不把课程引入中的历史日期、人物轶事或装饰性事实自动变成考点，除非课件真正讲授并要求掌握。\r\n\r\n## 工作流程\r\n\r\n1. 校验输入版本，读取意图、课程引入和课件；提取中心概念、机制、定义、对比、例题、边界\r\n   条件与明确学习目标。\r\n2. 建立私有证据图：`概念 → 已讲授的事实/关系/例子/误区`。任何无法落到证据图的内容不出题。\r\n3. 选择最少但信息量足够的题目。优先顺序通常是核心辨识 → 误区辨析 → 应用/预测 → 解释/迁移，\r\n   但可以根据材料自由删减或调整。\r\n4. 为每道题写答案、解释、评分信息和关键词；`total_points` 必须等于所有题目分值之和。\r\n5. 按 `references/quality-gate.md` 做一次重写式审查，而不是只做形式检查。\r\n6. 用 `scripts/quiz_contract.py validate-result` 校验，程序化调用时只返回 JSON，不包 Markdown 代码围栏。\r\n7. 需要在当前回合展示时，先使用公开快照；不要把内部答案、解析或关键词交给 learner-facing writer。\r\n\r\n## 证据不足与冲突\r\n\r\n不要用外部搜索修补上游材料的空白。若材料稀疏，生成更少、更安全的问题，并在内部\r\n`assumptions` 中记录限制；如果一个选择题无法构造唯一可信答案，改成有评分标准的简答题，\r\n或直接省略。材料互相冲突时保留不确定性，不把猜测写成答案。\r\n\r\n## 公开快照\r\n\r\n内部结果和学习者看到的题目必须分离。公开快照只保留可渲染内容：题目 ID、题型、题干、选项和\r\n分值。不得泄露答案、解析、关键词、假设或任何能反推出正确选项的内部信息。\r\n"
+  },
+  {
+    "slug": "retrieval-practice-builder",
+    "name": "retrieval-practice-builder",
+    "displayName": "检索练习构建器",
+    "description": "Build and prefetch one evidence-grounded retrieval, transfer, boundary-case, or misconception- discriminator task from taught content and learner evidence. Use after a concept checkpoint or while the learner is answering another task; discard the cache when the topic or evidence changes. Do not use it as a blocking tutor or as a replacement for deterministic grading.",
+    "displayDescription": "预取基于学习证据的检索、迁移、边界和误区辨析任务。",
+    "category": "Assessment & Practice",
+    "capabilities": [
+      "assess.generate"
+    ],
+    "phase": "assess",
+    "headings": [
+      "Retrieval Practice Builder",
+      "Role",
+      "Runtime contract",
+      "Candidate workflow",
+      "Difficulty and independence",
+      "Result requirements"
+    ],
+    "markdown": "---\r\nname: retrieval-practice-builder\r\ndescription: >-\r\n  Build and prefetch one evidence-grounded retrieval, transfer, boundary-case, or misconception-\r\n  discriminator task from taught content and learner evidence. Use after a concept checkpoint or\r\n  while the learner is answering another task; discard the cache when the topic or evidence changes.\r\n  Do not use it as a blocking tutor or as a replacement for deterministic grading.\r\nlicense: MIT\r\nmetadata:\n  category: \"Assessment & Practice\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 检索练习构建器\r\n  display-description: 预取基于学习证据的检索、迁移、边界和误区辨析任务。\r\n  output-language: zh-CN\r\n  output-contract: retrieval-practice-builder-result.v1\r\n  execution-mode: non-blocking-structured-generation\r\n  phase: assess\r\n  critical-path: false\r\n  learner-facing: artifact\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: background\r\n  capabilities: assess.generate\r\n  status-line: 正在准备检索练习…\r\n  provider: retrieval_practice\r\n  ownership: dedicated\r\n  eval-suite: retrieval-practice-builder-v1\r\n---\r\n\r\n# Retrieval Practice Builder\r\n\r\n## Role\r\n\r\nGenerate a small cache of candidate tasks and select one next task for later use. This Skill is a\r\nprefetch sidecar, not a learner-facing chat writer, assessor, grader, or tutor. `adaptive-pedagogy`\r\ndecides whether the selected artifact is still appropriate when the learner's next event arrives.\r\nThe host may discard the cache without penalty.\r\n\r\nRead `references/retrieval-practice-builder-task.schema.json` and\r\n`references/retrieval-practice-builder-result.schema.json`. Read\r\n`references/design-rules.md` for target types and candidate quality, then apply\r\n`references/quality-gate.md`.\r\n\r\n## Runtime contract\r\n\r\nRun from taught content and structured learner evidence. Prefer running while the learner is working\r\non the current task so the next task is ready before it is needed. Never block the current response,\r\nwait for learner-state persistence, or call another Skill. Set `prefetch.blocking=false` and include a\r\ndiscard condition for topic or evidence changes.\r\n\r\nThe primary output is a cache envelope with a learner-safe `public_task` and a separate internal\r\n`grading_key`. The public task may later be rendered by the host, but this Skill does not send it to\r\nthe learner or add a second conversational response.\r\n\r\n## Candidate workflow\r\n\r\n1. Treat the supplied taught content, objective, learner evidence, and evidence references as the\r\n   evidence boundary. Do not browse or add external facts.\r\n2. Select a target type from `retrieval`, `near_transfer`, `far_transfer`, `boundary_case`, and\r\n   `misconception_discriminator`. Choose the smallest target that can change the next support action.\r\n3. Generate up to three genuinely different candidates. Each candidate must be answerable from the\r\n   evidence boundary, independently solvable, and tied to at least one evidence reference.\r\n4. Validate answerability, one-main-judgment focus, misconception coverage, difficulty, and public /\r\n   internal separation. Reject candidates that depend on an unshown figure, hidden page state, or\r\n   cold knowledge.\r\n5. Select one candidate only when its task is better supported than the alternatives. If evidence is\r\n   too thin, return `status=insufficient_evidence`, no public task, and a Chinese warning.\r\n\r\n## Difficulty and independence\r\n\r\nDifficulty comes from reasoning distance, not obscure wording. A retrieval item asks for the taught\r\nrelation; near transfer changes the surface context; far transfer changes the application; a boundary\r\ncase probes the limit of a rule; a misconception discriminator separates two plausible rules.\r\n\r\nDo not count an assisted answer as independent evidence. If `verification_debt` is present, prefer a\r\nshort independent retrieval or near-transfer task and keep the answer in `grading_key` only.\r\n\r\n## Result requirements\r\n\r\nReturn `retrieval-practice-builder-result.v1` with candidates, selection, `public_task`, `grading_key`,\r\nvalidation details, evidence references, and a non-blocking prefetch envelope. Every learner-visible\r\nprompt, option, label, and warning must be Simplified Chinese. Never put `answer`, `explanation`,\r\n`rubric`, `keywords`, or internal assumptions inside `public_task`.\r\n\r\nValidate with:\r\n\r\n```text\r\npython scripts/retrieval_contract.py validate-task <task.json>\r\npython scripts/retrieval_contract.py validate-pair <task.json> <result.json>\r\n```\r\n\r\n"
+  },
+  {
+    "slug": "review-scheduler",
+    "name": "review-scheduler",
+    "displayName": "复习调度",
+    "description": "Decide which knowledge points are due for retrieval practice and when the next review should fall. Use to rank revisiting known material against teaching new material.",
+    "displayDescription": "决定哪些知识点该复习、下次复习安排在什么时候，用于和「学新内容」竞争排序。",
+    "category": "Learner State & Curriculum",
+    "capabilities": [
+      "review.schedule"
+    ],
+    "phase": "learner-model",
+    "headings": [
+      "复习调度",
+      "角色",
+      "模型",
+      "这个 Skill 负责什么",
+      "输出契约 `review-schedule-result.v1`",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: review-scheduler\r\ndescription: >-\r\n  Decide which knowledge points are due for retrieval practice and when the next review should\r\n  fall. Use to rank revisiting known material against teaching new material.\r\nlicense: MIT\r\nmetadata:\n  category: \"Learner State & Curriculum\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 复习调度\r\n  display-description: 决定哪些知识点该复习、下次复习安排在什么时候，用于和「学新内容」竞争排序。\r\n  output-language: zh-CN\r\n  output-contract: review-schedule-result.v1\r\n  execution-mode: synchronous-structured-generation\r\n  phase: learner-model\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  capabilities: review.schedule\r\n  status-line: 正在安排复习节奏…\r\n  provider: review_scheduler\r\n  ownership: dedicated\r\n---\r\n\r\n# 复习调度\r\n\r\n## 角色\r\n\r\n遗忘是默认行为，不是意外。这个 skill 让「回头复习」能和「继续学新的」在同一把尺子上比较——\r\n两者都换算成学习收益，由 orchestrator 排序。\r\n\r\n## 模型\r\n\r\n宿主 `state/scheduling.py` 已实现确定性部分，这里描述它的语义，Skill 不重复计算：\r\n\r\n- `stability`：记忆预期还能撑多少天。答对且未用提示 → 按难度决定的 ease 增长；\r\n  答错 → 收缩到原区间的 25%–60%，**不清零**（学习者毕竟见过一次）。\r\n- `review_due_at` = `last_studied_at + stability` 天。\r\n- `review_priority` = `0.45 × 逾期度 + 0.35 × 薄弱度 + 0.20 × 不确定度`，\r\n  存在未消解误区再 `+0.15`，上限 1.0。逾期度按 14 天饱和。\r\n\r\n## 这个 Skill 负责什么\r\n\r\n1. 从档案里挑出 `review_priority` 最高的 1–3 个点，**不要一次给一张复习清单**。\r\n2. 为每个点说明「为什么现在复习」，引用具体数字（逾期天数 / 掌握度 / 证据条数）。\r\n3. 给出复习形式建议：`retrieval`（无提示回忆）/ `discriminate`（误区辨析）/\r\n   `transfer`（迁移应用）。掌握度低用 `retrieval`，有误区用 `discriminate`，\r\n   掌握度高用 `transfer`。\r\n4. 输出建议的下次 `review_due_at`——只在学习者本轮确实复习了之后才由 state_updater 落库。\r\n\r\n## 输出契约 `review-schedule-result.v1`\r\n\r\n```json\r\n{\r\n  \"due\": [\r\n    {\"knowledge_point_id\": \"three-way-handshake\", \"priority\": 0.81,\r\n     \"overdue_days\": 6, \"mastery\": 0.44, \"evidence_count\": 4,\r\n     \"form\": \"discriminate\",\r\n     \"reason\": \"逾期 6 天，且上次作答暴露了「SYN 与 ACK 各自计数」的误区\"}\r\n  ],\r\n  \"not_due\": [\"tcp-congestion\"],\r\n  \"warnings\": []\r\n}\r\n```\r\n\r\n## 反模式\r\n\r\n- 一次推 10 个复习点，把控制面板变成待办地狱。\r\n- 只看时间不看掌握度：逾期但已牢固的点不值得挤占本轮。\r\n- 在学习者刚学完的同一轮就安排复习——间隔效应需要间隔。\r\n"
+  },
+  {
+    "slug": "skill-eval-harness",
+    "name": "skill-eval-harness",
+    "displayName": "教学 Skill 评测",
+    "description": "Evaluate Lingxi teaching Skills and their run artifacts across component contracts, execution trajectories, pedagogical safety/quality, and learner outcomes. Use when a Skill is added or revised, when a regression suite must be run, or when raw task/result/trace/outcome JSON needs a deterministic report; do not use it in the learner's runtime path.",
+    "displayDescription": "从组件契约、执行轨迹、教学质量和学习结果四层评测教学 Skill。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "meta.evaluate"
+    ],
+    "phase": "development",
+    "headings": [
+      "Teaching Skill Evaluation",
+      "Evaluation workflow",
+      "Four evaluation layers",
+      "Evaluation boundaries",
+      "Result contract"
+    ],
+    "markdown": "---\r\nname: skill-eval-harness\r\ndescription: >-\r\n  Evaluate Lingxi teaching Skills and their run artifacts across component contracts, execution\r\n  trajectories, pedagogical safety/quality, and learner outcomes. Use when a Skill is added or\r\n  revised, when a regression suite must be run, or when raw task/result/trace/outcome JSON needs a\r\n  deterministic report; do not use it in the learner's runtime path.\r\nlicense: MIT\r\nmetadata:\n  category: \"Quality & Utilities\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 教学 Skill 评测\r\n  display-description: 从组件契约、执行轨迹、教学质量和学习结果四层评测教学 Skill。\r\n  output-language: zh-CN\r\n  output-contract: skill-eval-report.v1\r\n  execution-mode: development-deterministic-evaluation\r\n  phase: development\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: offline\r\n  capabilities: meta.evaluate\r\n  status-line: 正在检查技能表现…\r\n  provider: skill_eval\r\n  ownership: dedicated\r\n  eval-suite: skill-eval-harness-v1\r\n---\r\n\r\n# Teaching Skill Evaluation\r\n\r\nUse this development-time Skill to turn raw evaluation cases into a comparable, traceable report.\r\nIt evaluates an existing Skill's contract and observed artifacts; it does not generate teaching\r\nresponses, replace a deterministic grader, or write learner state.\r\n\r\n## Evaluation workflow\r\n\r\n1. Build a `skill-eval-run.v1` JSON file. Keep the learner task and raw output in each case; put\r\n   expected answers, forbidden strings, thresholds, and rubric-only labels in `expectations`, not in\r\n   the learner prompt.\r\n2. Include an execution `trajectory` whenever latency, blocking, handoffs, repeated questions, or\r\n   sidecar behavior matters. Include an `outcome` when an independent transfer or post-test is\r\n   available. Missing layers are reported as `not_observed`, not silently treated as success.\r\n3. Read `references/skill-eval-run.schema.json` and `references/rubric.md` for the case shape and\r\n   layer rules. Use the smallest raw artifact that still preserves evidence IDs and timing.\r\n4. Run the deterministic helper:\r\n\r\n   ```text\r\n   python scripts/evaluate.py validate-run <run.json>\r\n   python scripts/evaluate.py evaluate <run.json> --output <report.json>\r\n   python scripts/run_suite.py <repository-root> --output <suite-report.json>\r\n   ```\r\n\r\n   Individual reports follow `references/skill-eval-report.schema.json`; repository-wide suite\r\n   reports follow `references/skill-eval-suite-report.schema.json`.\r\n\r\n5. Review every failing finding and the observed coverage. Set `expectations.required_layers` for\r\n   layers that a case must observe; a missing required layer fails the case. A Skill passes only when the component\r\n   layer has no errors and every layer required by the case expectations passes. Do not hide missing\r\n   learner outcomes behind a high component score.\r\n\r\n## Four evaluation layers\r\n\r\n- **component** — frontmatter, execution metadata, required output fields, known result contracts,\r\n  and artifact shape.\r\n- **trajectory** — one learner-facing writer, no accidental handoff loop, no repeated prompt without\r\n  new evidence, sidecars not blocking the response, and latency/token/hop budgets.\r\n- **pedagogy** — answer leakage, evidence grounding, hint/reveal limits, question-value discipline,\r\n  and usable fallback for non-blocking visual work.\r\n- **learner_outcome** — independent transfer, score change when a threshold is supplied, verification\r\n  debt discharge, and evidence traceability.\r\n\r\nUse `validator` values for the bundled contracts (`adaptive-pedagogy-result.v2`,\r\n`learner-state-reflector-result.v1`, `quiz-generation-result.v1`,\r\n`curriculum-graph-builder-result.v1`, `formative-assessor-result.v1`,\r\n`retrieval-practice-builder-result.v1`, `lesson-intro-html.v1`, `html`) or provide\r\n`required_output_keys` for another Skill. The harness performs deterministic checks only; judgments\r\nsuch as whether a misconception interpretation is pedagogically sound still require human review or\r\na separately specified judge.\r\n\r\n## Evaluation boundaries\r\n\r\n- Keep expected answers outside learner-facing text and do not pass the intended fix to a forward\r\n  test agent.\r\n- Treat `learner-state-reflector`, visual generation, quiz generation, and remedial artifacts as\r\n  sidecars unless the case explicitly tests their standalone artifact contract.\r\n- Enforce `learner_facing_writer_count <= 1` for a learner turn.\r\n- Report latency and token measurements supplied by the host; never invent measurements.\r\n- Keep expected answers outside the learner-facing paths used by leakage checks. For retrieval tasks,\r\n  inspect `public_task`, never the internal `grading_key`.\r\n- For `lesson-intro-html.v1`, check the shared visual contract as well as basic HTML shape: tokenized\r\n  palette, 680-wide SVG, figure caption, dark/print modes, no gradients/shadows, and restrained\r\n  typography.\r\n- Never mutate the tested Skill or learner data. Write only the requested report file.\r\n\r\n## Result contract\r\n\r\nReturn `skill-eval-report.v1` JSON with per-case findings, four layer scores, observed coverage,\r\nthresholds, and a concise overall status. Preserve case IDs, evidence IDs, and raw metric values so a\r\nfailing report can be traced back to the source artifact.\r\n\r\n`run_suite.py` discovers checked-in `skills/*/assets/eval-run.json` files, evaluates each suite, and\r\nreturns `skill-eval-suite-report.v1`. It is intended for development and CI, never for student\r\nruntime.\r\n"
+  },
+  {
+    "slug": "skill-forge",
+    "name": "skill-forge",
+    "displayName": "能力起草",
+    "description": "Draft a new skill manifest when the orchestrator finds no registered capability that can serve the goal. The draft is always registered disabled and never auto-enabled.",
+    "displayDescription": "当没有任何已注册能力可以服务目标时起草一个新 skill，草稿始终以禁用状态注册，永不自动启用。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "meta.author_skill"
+    ],
+    "phase": "development",
+    "headings": [
+      "能力起草",
+      "角色",
+      "起草前先自问",
+      "草稿必须包含",
+      "输出契约 `skill-forge-result.v1`",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: skill-forge\r\ndescription: >-\r\n  Draft a new skill manifest when the orchestrator finds no registered capability that can serve\r\n  the goal. The draft is always registered disabled and never auto-enabled.\r\nlicense: MIT\r\nmetadata:\n  category: \"Quality & Utilities\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 能力起草\r\n  display-description: 当没有任何已注册能力可以服务目标时起草一个新 skill，草稿始终以禁用状态注册，永不自动启用。\r\n  output-language: zh-CN\r\n  output-contract: skill-forge-result.v1\r\n  execution-mode: authoring-structured-generation\r\n  phase: development\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: proposal-only\r\n  parallel-safe: true\r\n  latency-class: offline\r\n  capabilities: meta.author_skill\r\n  status-line: 正在起草新的学习能力…\r\n  provider: skill_forge\r\n  ownership: dedicated\r\n---\r\n\r\n# 能力起草\r\n\r\n## 角色\r\n\r\norchestrator 只能在注册表里选能力。注册表里没有的，它会报一个 `capability_gap`。\r\n这个 skill 把缺口写成一份新的 SKILL.md 草稿。\r\n\r\n**草稿永远以 `enabled=false` 注册。** 启用是不可逆操作，必须学习者确认；\r\n每个任务最多起草 `max_forged_skills` 个（默认 1）。\r\n\r\n## 起草前先自问\r\n\r\n1. **真的缺能力，还是只是候选被前置条件挡住了？** 后者不需要新 skill。\r\n2. **现有 skill 换一组输入能不能覆盖？** 能就不要造新的。\r\n3. **这个缺口会重复出现吗？** 一次性需求不值得一个 skill。\r\n\r\n三个问题里有任何一个指向「不需要」，就返回 `{\"action\": \"no_forge\", \"reason\": \"...\"}`。\r\n\r\n## 草稿必须包含\r\n\r\n- `name`：kebab-case，动宾结构，说清它做什么\r\n- `metadata.capabilities`：**只能从既有能力词表里选**。词表里没有合适的标签，\r\n  说明这是一次架构变更，不是一个新 skill——返回 `no_forge` 并说明。\r\n- `metadata.provider`：能执行它的 provider；没有现成 provider 时留空，\r\n  草稿只能作为文档存在，不能被调度\r\n- `output-contract`：新契约的名字与字段\r\n- `preconditions`：什么状态下它才可选\r\n- `latency-class` 与是否 `heavy_artifact`\r\n- 正文：角色 / 规则 / 输出契约 / 反模式，与既有 skill 同构\r\n\r\n## 输出契约 `skill-forge-result.v1`\r\n\r\n```json\r\n{\r\n  \"action\": \"forge\",\r\n  \"skill_id\": \"counterexample-generator\",\r\n  \"manifest\": \"---\\nname: counterexample-generator\\n...\",\r\n  \"capability_gap\": \"teach.explain 下缺少「用反例暴露误区」这一具体做法\",\r\n  \"reason\": \"该学习者连续 3 次在同一误区上失分，正面讲解已重复两轮\",\r\n  \"enabled\": false,\r\n  \"requires_confirmation\": true\r\n}\r\n```\r\n\r\n## 反模式\r\n\r\n- 为一次失败起草一个 skill。\r\n- 造一个新的能力标签（那是改架构，不是加技能）。\r\n- 起草完顺手启用。\r\n"
+  },
+  {
+    "slug": "socratic-prober",
+    "name": "socratic-prober",
+    "displayName": "苏格拉底追问",
+    "description": "在掌握度不确定或存在误区时向学习者确认理解。",
+    "displayDescription": "通过一个短问题确认学习者的理解。",
+    "category": "Teaching & Dialogue",
+    "capabilities": [
+      "dialog.probe"
+    ],
+    "phase": "teaching",
+    "headings": [
+      "苏格拉底追问"
+    ],
+    "markdown": "---\r\nname: socratic-prober\r\ndescription: >-\r\n  在掌握度不确定或存在误区时向学习者确认理解。\r\nmetadata:\n  category: \"Teaching & Dialogue\"\n  version: 1.0.0\n  display-name: 苏格拉底追问\r\n  display-description: 通过一个短问题确认学习者的理解。\r\n  phase: teaching\r\n  capabilities: dialog.probe\r\n  provider: probe_user\r\n  parallel-safe: false\r\n  critical-path: true\r\n  blocking: true\r\n  latency-class: interactive\r\n  status-line: 正在确认你的理解…\r\n  ownership: dedicated\r\n---\r\n\r\n# 苏格拉底追问\r\n\r\n一次只问一个能区分理解程度的问题，不直接泄露答案。\r\n"
+  },
+  {
+    "slug": "structured-output",
+    "name": "structured-output",
+    "displayName": "结构化输出",
+    "description": "Produce and repair strict JSON contract output from a model turn. Use whenever a step's result is consumed by code rather than read by a human.",
+    "displayDescription": "产出并修复严格 JSON 契约输出，用于结果由代码消费而非人阅读的步骤。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "structured-output"
+    ],
+    "phase": "shared",
+    "headings": [
+      "结构化输出",
+      "角色",
+      "规则",
+      "修复阶梯",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: structured-output\r\ndescription: >-\r\n  Produce and repair strict JSON contract output from a model turn. Use whenever a step's result\r\n  is consumed by code rather than read by a human.\r\nlicense: MIT\r\nmetadata:\n  category: \"Quality & Utilities\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 结构化输出\r\n  status-line: 正在整理结构化结果…\r\n  display-description: 产出并修复严格 JSON 契约输出，用于结果由代码消费而非人阅读的步骤。\r\n  output-language: zh-CN\r\n  execution-mode: shared-contract\r\n  phase: shared\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  provider: \r\n  ownership: shared\r\n---\r\n\r\n# 结构化输出\r\n\r\n## 角色\r\n\r\n运行时的每一步都由代码消费。散文没有消费者。这个 skill 规定契约输出怎么写、怎么修。\r\n\r\n## 规则\r\n\r\n1. **只输出 JSON 对象**，不要 Markdown 代码围栏之外的解释、不要思考过程、不要前后寒暄。\r\n2. **契约字段齐全**：缺字段比多字段更危险，缺字段会让下游拿到 `None` 继续跑。\r\n3. **不要把大产物塞进 JSON**。HTML/SVG/课件通过 artifact 工具写文件，JSON 里只放回执。\r\n4. **枚举值用契约里的原文**，不要翻译、不要同义替换（`emerging` 不是 `正在形成`）。\r\n5. **数字就是数字**，不要 `\"0.8\"`、不要 `\"约 0.8\"`。\r\n6. 面向学习者的文案字段用简体中文；协议键、schema token、文件名、公式、代码、URL 保持原样。\r\n\r\n## 修复阶梯\r\n\r\n宿主解析失败时按顺序尝试，不要一次就让整步失败：\r\n\r\n1. 抽取第一个完整 JSON 对象（容忍围栏和前后散文）。\r\n2. 用契约默认值补齐缺失的可选字段。\r\n3. 用一次带错误信息的重试让模型自修（只重试一次）。\r\n4. 仍失败 → 走 `graceful-degradation`，用确定性回退结果继续循环。\r\n\r\n## 反模式\r\n\r\n- 返回 `{\"result\": \"```json ... ```\"}` 这样的嵌套字符串。\r\n- 把答案、解析等内部字段混进公开快照。\r\n- 用 `null` 表示\"我不知道\"却不带 `warnings` 说明。\r\n"
+  },
+  {
+    "slug": "tool-investigator",
+    "name": "tool-investigator",
+    "displayName": "工具核查",
+    "description": "Run the course pack's registered deterministic tools over real artifacts and turn the output into citable evidence. Use when a claim can be checked instead of asserted.",
+    "displayDescription": "对真实材料运行课程包注册的确定性工具，把输出变成可引用的证据。",
+    "category": "Quality & Utilities",
+    "capabilities": [
+      "tool.investigate"
+    ],
+    "phase": "investigate",
+    "headings": [
+      "工具核查",
+      "角色",
+      "规则",
+      "输出契约 `investigation-result.v1`",
+      "反模式"
+    ],
+    "markdown": "---\r\nname: tool-investigator\r\ndescription: >-\r\n  Run the course pack's registered deterministic tools over real artifacts and turn the output\r\n  into citable evidence. Use when a claim can be checked instead of asserted.\r\nlicense: MIT\r\nmetadata:\n  category: \"Quality & Utilities\"\n  author: LingXi-Org\n  version: 1.0.0\r\n  display-name: 工具核查\r\n  display-description: 对真实材料运行课程包注册的确定性工具，把输出变成可引用的证据。\r\n  output-language: zh-CN\r\n  output-contract: investigation-result.v1\r\n  execution-mode: deterministic-evaluation\r\n  phase: investigate\r\n  critical-path: false\r\n  learner-facing: false\r\n  state-write-mode: none\r\n  parallel-safe: true\r\n  latency-class: interactive\r\n  capabilities: tool.investigate\r\n  status-line: 正在核查相关资料…\r\n  provider: pack_investigate\r\n  ownership: dedicated\r\n---\r\n\r\n# 工具核查\r\n\r\n## 角色\r\n\r\n「能算的不要猜」。课程包声明能力名，`tools/registry.py` 解析成真实 Python。\r\n这个 skill 负责挑对工具、传对参数、把输出变成带 id 的证据。\r\n\r\n## 规则\r\n\r\n1. **工具按能力名解析**，不要在教学逻辑里直接 import 领域模块。\r\n   新增学科 = 注册新命名空间，不是改这一步。\r\n2. **工具失败是教学素材，不是 500**。`ToolResult.ok=False` 时把失败原因作为\r\n   `error_pattern` 证据保留，并把失败情况告诉学习者。\r\n3. **每个工具输出都进证据账本并拿到 id**。后续任何教学论断引用这个 id；\r\n   引用不存在的 id 是硬错误（`kernel/evidence.py::verify_citations` 会抓）。\r\n4. **不要把原始输出整包塞给模型**。抓包字节、完整表格、数据库原始记录先摘要，\r\n   再进教学上下文。\r\n5. 工具输出与学习者的答案冲突时，**以工具为准**，并把冲突本身记成误区证据。\r\n\r\n## 输出契约 `investigation-result.v1`\r\n\r\n```json\r\n{\r\n  \"calls\": [\r\n    {\"tool\": \"net.ipv4.lpm\", \"args\": {\"prefixes\": [\"10.0.0.0/8\"], \"address\": \"10.1.2.3\"},\r\n     \"ok\": true, \"duration_ms\": 3,\r\n     \"evidence_id\": \"ev_9f2c\", \"summary\": \"最长前缀匹配命中 10.0.0.0/8\"}\r\n  ],\r\n  \"failed\": [],\r\n  \"warnings\": []\r\n}\r\n```\r\n\r\n## 反模式\r\n\r\n- 让模型「心算」一个有工具能算的结果。\r\n- 工具报错就让整个任务失败。\r\n- 论断引用一个没有产出过的 evidence id。\r\n"
+  }
+]

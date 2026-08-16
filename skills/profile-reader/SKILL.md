@@ -6,6 +6,7 @@ description: >-
   knows; never use it to write the profile.
 license: MIT
 metadata:
+  category: "Learner State & Curriculum"
   author: LingXi-Org
   version: 1.0.0
   display-name: 学习档案读取

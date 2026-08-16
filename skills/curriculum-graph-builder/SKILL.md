@@ -4,6 +4,7 @@ description: >-
   Build or incrementally extend a learner-specific curriculum knowledge graph from structured learning context while preserving stable node IDs, explicit relation direction, curricular importance, optional hierarchy/layout hints, and learner-state overlays. Decide whether to create a new graph or extend an existing graph, and return a deterministic graph patch for the host system to validate and persist.
 license: MIT
 metadata:
+  category: "Learner State & Curriculum"
   author: LingXi-Org
   version: 1.1.0
   display-name: 个性化课程知识图谱构建
