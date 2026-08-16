@@ -6,6 +6,7 @@ description: >-
   strategy or to reveal unanswered quiz answers.
 license: MIT
 metadata:
+  category: "Teaching & Dialogue"
   author: LingXi-Org
   version: 1.0.0
   display-name: 知识点答疑

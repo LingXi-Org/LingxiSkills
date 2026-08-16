@@ -6,6 +6,7 @@ description: >-
   runtime teaches the request or the thing under it.
 license: MIT
 metadata:
+  category: "Learner State & Curriculum"
   author: LingXi-Org
   version: 1.0.0
   display-name: 前置依赖分析

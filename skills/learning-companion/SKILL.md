@@ -3,6 +3,7 @@ name: learning-companion
 description: >-
   在学习任务执行期间快速回应学习者的消息，并把有效反馈留给下一轮编排。
 metadata:
+  category: "Teaching & Dialogue"
   version: 1.0.0
   display-name: 学习对话
   display-description: 执行期间即时回应学习者消息。

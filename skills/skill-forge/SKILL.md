@@ -5,6 +5,7 @@ description: >-
   the goal. The draft is always registered disabled and never auto-enabled.
 license: MIT
 metadata:
+  category: "Quality & Utilities"
   author: LingXi-Org
   version: 1.0.0
   display-name: 能力起草

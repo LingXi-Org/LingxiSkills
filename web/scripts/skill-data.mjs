@@ -8,6 +8,14 @@ export const repositoryRoot = path.resolve(webDirectory, '..');
 export const skillsDirectory = path.join(repositoryRoot, 'skills');
 
 const RESOURCE_KINDS = ['references', 'scripts', 'assets', 'agents', 'tests'];
+export const SKILL_CATEGORIES = [
+  'Teaching & Dialogue',
+  'Content & Visualization',
+  'Assessment & Practice',
+  'Learner State & Curriculum',
+  'Orchestration & Runtime',
+  'Quality & Utilities',
+];
 
 function unquote(value) {
   const trimmed = String(value ?? '').trim();
@@ -134,16 +142,15 @@ function titleCaseSlug(slug) {
     .join(' ');
 }
 
-function deriveCategory(metadata, capabilities, phase, ownership) {
-  const explicit = asString(metadata.category);
-  if (explicit) return explicit;
-  const signal = [...capabilities, phase, ownership].filter(Boolean).join(' ').toLowerCase();
-  if (/dialog|socratic|teach|pedagog|lesson|explain|interview/.test(signal)) return 'Teaching & Dialogue';
-  if (/visual|content|lecture|deck|artifact|page/.test(signal)) return 'Content & Visualization';
-  if (/assess|quiz|practice|grade|retriev|review|evidence/.test(signal)) return 'Assessment & Practice';
-  if (/learner|curriculum|state|goal|prerequisite|profile/.test(signal)) return 'Learner State & Curriculum';
-  if (/orchestrat|runtime|policy|schedule|delivery|companion/.test(signal)) return 'Orchestration & Runtime';
-  return 'Quality & Utilities';
+function categoryFor(metadata, slug) {
+  const category = asString(metadata.category);
+  if (!category) {
+    throw new Error(`Skill "${slug}" is missing metadata.category`);
+  }
+  if (!SKILL_CATEGORIES.includes(category)) {
+    throw new Error(`Skill "${slug}" has unsupported metadata.category: ${category}`);
+  }
+  return category;
 }
 
 function listFiles(directory) {
@@ -219,7 +226,7 @@ export function discoverSkills() {
       description,
       displayDescription,
       version: asString(metadata.version),
-      category: deriveCategory(metadata, normalizedCapabilities, phase, ownership),
+      category: categoryFor(metadata, slug),
       phase,
       capabilities: normalizedCapabilities,
       executionMode: asString(metadata['execution-mode'] ?? metadata.executionMode),

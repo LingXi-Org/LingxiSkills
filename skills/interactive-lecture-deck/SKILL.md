@@ -4,6 +4,7 @@ description: >-
   Build a fixed-size, self-contained HTML lecture deck with visual slides, structured explanations, zoom data, and offline delivery.
 license: MIT
 metadata:
+  category: "Content & Visualization"
   author: LingXi-Org
   version: 1.4.0
   display-name: 交互式讲解课件

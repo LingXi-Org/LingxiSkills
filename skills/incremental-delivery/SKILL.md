@@ -3,6 +3,7 @@ name: incremental-delivery
 description: >-
   让内容生成优先交付最小可用结果，再逐步增强。
 metadata:
+  category: "Orchestration & Runtime"
   version: 1.0.0
   display-name: 增量交付
   display-description: 先交付可用草稿，再继续增强内容。

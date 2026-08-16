@@ -5,6 +5,7 @@ description: >-
   is consumed by code rather than read by a human.
 license: MIT
 metadata:
+  category: "Quality & Utilities"
   author: LingXi-Org
   version: 1.0.0
   display-name: 结构化输出

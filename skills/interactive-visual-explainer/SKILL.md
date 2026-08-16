@@ -4,6 +4,7 @@ description: >-
   Create a self-contained, offline interactive HTML explainer for concepts that are easier to understand through visual manipulation.
 license: MIT
 metadata:
+  category: "Content & Visualization"
   author: LingXi-Org
   version: 1.3.0
   display-name: 交互式可视化讲解

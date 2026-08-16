@@ -5,6 +5,7 @@ description: >-
   fall. Use to rank revisiting known material against teaching new material.
 license: MIT
 metadata:
+  category: "Learner State & Curriculum"
   author: LingXi-Org
   version: 1.0.0
   display-name: 复习调度

@@ -5,6 +5,7 @@ description: >-
   path; a failed step must degrade to a usable result, never stall the loop.
 license: MIT
 metadata:
+  category: "Orchestration & Runtime"
   author: LingXi-Org
   version: 1.0.0
   display-name: 降级回退

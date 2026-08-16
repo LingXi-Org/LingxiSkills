@@ -7,6 +7,7 @@ description: >-
   Do not use it as a blocking tutor or as a replacement for deterministic grading.
 license: MIT
 metadata:
+  category: "Assessment & Practice"
   author: LingXi-Org
   version: 1.0.0
   display-name: 检索练习构建器

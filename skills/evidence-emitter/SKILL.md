@@ -6,6 +6,7 @@ description: >-
   agent may influence the learning profile.
 license: MIT
 metadata:
+  category: "Quality & Utilities"
   author: LingXi-Org
   version: 1.0.0
   display-name: 学习证据产出

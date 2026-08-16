@@ -4,6 +4,7 @@ description: >-
   Generate a compact, evidence-grounded formative quiz from taught lesson content to assess understanding and reveal misconceptions.
 license: MIT
 metadata:
+  category: "Assessment & Practice"
   author: LingXi-Org
   version: 1.1.0
   display-name: 知识点测评生成

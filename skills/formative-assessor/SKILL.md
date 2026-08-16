@@ -7,6 +7,7 @@ description: >-
   to guess learner psychology or write a student-facing response.
 license: MIT
 metadata:
+  category: "Assessment & Practice"
   author: LingXi-Org
   version: 1.0.0
   display-name: 形成性评估解释器

@@ -4,6 +4,7 @@ description: >-
   Compress recent learning events into cautious, traceable learner-state update proposals without interrupting instruction.
 license: MIT
 metadata:
+  category: "Learner State & Curriculum"
   author: LingXi-Org
   version: 1.1.0
   display-name: 学习状态反思

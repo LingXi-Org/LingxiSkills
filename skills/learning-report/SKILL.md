@@ -5,6 +5,7 @@ description: >-
   satisfied; every claim must cite evidence that exists.
 license: MIT
 metadata:
+  category: "Learner State & Curriculum"
   author: LingXi-Org
   version: 1.0.0
   display-name: 学习报告

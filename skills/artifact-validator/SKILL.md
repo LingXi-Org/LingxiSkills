@@ -5,6 +5,7 @@ description: >-
   after any artifact-generating step; a model receipt claiming success is not validation.
 license: MIT
 metadata:
+  category: "Quality & Utilities"
   author: LingXi-Org
   version: 1.0.0
   display-name: 产物校验
