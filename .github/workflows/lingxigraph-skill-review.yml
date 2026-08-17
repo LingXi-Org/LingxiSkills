@@ -2,10 +2,6 @@ name: LingxiGraph Skill Review
 
 on:
   pull_request:
-    paths:
-      - "skills/**"
-      - "templates/SKILL.md"
-      - ".github/workflows/lingxigraph-skill-review.yml"
   workflow_dispatch:
 
 permissions:
