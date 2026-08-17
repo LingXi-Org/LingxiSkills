@@ -9,11 +9,6 @@ on:
       - '.github/workflows/site.yml'
       - '.github/workflows/validate.yml'
   pull_request:
-    paths:
-      - 'skills/**'
-      - 'web/**'
-      - '.github/workflows/site.yml'
-      - '.github/workflows/validate.yml'
   workflow_dispatch:
 
 permissions:
