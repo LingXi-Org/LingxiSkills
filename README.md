@@ -93,9 +93,6 @@ python -m skills_ref.cli validate skills/<skill-name>
 ```
 
 3. 提交 PR，并完成 PR 模板中的自查项。
-4. 对新增 Skill，`LingxiGraph Skill Review` Action 会安装当前 `LingXi-Org/LingxiGraph@main`，直接调用 LingxiGraph 自己的 `validate_skill()` 与 `FilesystemSkillSource` 做兼容性审查，同时继续运行 `skills-ref` 交叉验证。
-
-这意味着 CI 的 LingxiGraph 兼容性结论来自实际运行时实现，而不是另一套近似规则。
 
 ## 贡献与质量
 
