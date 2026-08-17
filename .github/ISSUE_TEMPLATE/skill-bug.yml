@@ -1,0 +1,45 @@
+name: Skill 缺陷或兼容性问题
+description: 报告现有 Skill 的行为、资源或 LingxiGraph 兼容性问题
+title: "[Skill Bug]: "
+body:
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill 名称
+      placeholder: adaptive-pedagogy
+    validations:
+      required: true
+  - type: input
+    id: runtime
+    attributes:
+      label: 运行时与版本
+      description: 例如 LingxiGraph 2.2.x、其他 Agent Skills runtime，或具体 commit。
+      placeholder: LingxiGraph 2.2.x
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际行为
+      description: 描述发生了什么，并附上最小复现步骤。
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志或校验输出
+      description: 请移除 Token、密钥、个人信息和其他敏感数据。
+      render: shell
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: 隐私确认
+      options:
+        - label: 我已确认日志中不包含 Token、密钥或个人敏感信息。
+          required: true

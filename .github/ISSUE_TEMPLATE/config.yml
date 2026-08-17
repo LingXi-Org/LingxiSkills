@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: LingxiGraph Runtime
+    url: https://github.com/LingXi-Org/LingxiGraph/issues
+    about: 如果问题来自 LingxiGraph 的运行时、加载器或安全边界，请在 LingxiGraph 仓库提交。

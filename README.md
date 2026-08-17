@@ -2,137 +2,107 @@
 
 # LingxiSkills
 
-**Composable Agent Skills for AI learning products.**
+**面向 AI 学习产品的可组合 Agent Skills。**
 
-Reusable teaching, visualization, assessment, learner-state, runtime, orchestration, and evaluation capabilities for the LingXi stack.
+将教学、可视化、测评、学习者状态、编排与评测能力沉淀为可复用的 Skill，并由 LingxiGraph 或其他兼容 Agent Skills 的运行时按需发现和加载。
 
-[简体中文](README.zh-CN.md) · [LingxiGraph](https://github.com/LingXi-Org/LingxiGraph) · [LingxiLearn](https://github.com/LingXi-Org/LingxiLearn)
+[English](README.en.md) · [LingxiGraph](https://github.com/LingXi-Org/LingxiGraph) · [LingxiLearn](https://github.com/LingXi-Org/LingxiLearn)
 
 </div>
 
-## About
+## 项目定位
 
-LingxiSkills is the reusable capability layer of the LingXi stack. Each Skill is an independently discoverable directory centered on a `SKILL.md` contract, with optional references, scripts, assets, agents, and tests.
-
-The repository currently contains **31 top-level Skills**. They cover learner-facing teaching capabilities as well as runtime control, orchestration, validation, evidence, and reusable utility contracts.
-
-Products such as LingxiLearn consume these capabilities through LingxiGraph or another compatible Agent Skills runtime.
+LingxiSkills 是 LingXi 技术栈中的开放能力层。每个 Skill 都是 `skills/` 下可独立发现的目录，以 `SKILL.md` 作为能力契约，可按需附带 `references/`、`scripts/` 与 `assets/`。
 
 ```text
-Learning Product
+学习产品 / Agent
       │
       ▼
 LingxiGraph Runtime
       │
       ▼
 LingxiSkills
-SKILL.md · References · Scripts · Assets
+SKILL.md · references · scripts · assets
 ```
 
-## Current Skills
+LingxiGraph 负责运行时发现、渐进加载、工具授权、HITL、超时、预算与安全边界；LingxiSkills 负责可复用能力的行为说明、资源与质量门禁。Skill 中的脚本只是可读取资源，读取 Skill 不代表授权或执行脚本。
 
-### Teaching & dialogue
-
-- `adaptive-pedagogy`
-- `knowledge-qa`
-- `learner-interview`
-- `learning-companion`
-- `negotiation`
-- `socratic-prober`
-
-### Content & visualization
-
-- `lesson-intro`
-- `interactive-lecture-deck`
-- `interactive-visual-explainer`
-
-### Assessment & practice
-
-- `deterministic-grader`
-- `formative-assessor`
-- `quiz-generator`
-- `retrieval-practice-builder`
-
-### Learner state & curriculum
-
-- `curriculum-graph-builder`
-- `learner-state-reflector`
-- `learning-report`
-- `prerequisite-analyzer`
-- `profile-reader`
-- `review-scheduler`
-
-### Orchestration & runtime
-
-- `goal-interpreter`
-- `graceful-degradation`
-- `incremental-delivery`
-- `orchestrator-policy`
-- `plan-presenter`
-
-### Quality & utilities
-
-- `artifact-validator`
-- `evidence-emitter`
-- `product-page-component-rewriter`
-- `skill-eval-harness`
-- `skill-forge`
-- `structured-output`
-- `tool-investigator`
-
-## Quick start
-
-### With LingxiGraph
+## 与 LingxiGraph 集成
 
 ```python
-from lingxigraph import FilesystemSkillSource, create_agent
+from lingxigraph import FilesystemSkillSource, HumanMessage, create_agent
 
 skills = FilesystemSkillSource("/path/to/LingxiSkills/skills")
 agent = create_agent(model, skills=skills)
+result = agent.invoke({"messages": [HumanMessage("帮我解释交叉熵")]})
 ```
 
-### With the Skills CLI
+LingxiGraph 会先只暴露 Skill 的 `name` 与 `description`；模型判断需要后，再通过 `read_skill` 读取完整 `SKILL.md`，并通过 `read_skill_resource` 按需读取资源。
+
+也可以通过开放 Skills CLI 安装：
 
 ```bash
 npx skills add LingXi-Org/LingxiSkills
-```
-
-Install a single Skill:
-
-```bash
 npx skills add LingXi-Org/LingxiSkills --skill adaptive-pedagogy
 ```
 
-## Skill structure
+## LingxiGraph Skill 规范
+
+LingxiGraph 直接读取开放 Agent Skills 目录，不定义私有 Skill 格式。提交到本仓库的 Skill 应满足：
+
+- 路径为 `skills/<skill-name>/SKILL.md`，文件名使用大写 `SKILL.md`。
+- `SKILL.md` 必须包含 YAML frontmatter。
+- `name`、`description` 为必填字段。
+- `license`、`compatibility`、`metadata`、`allowed-tools` 为可选标准字段；扩展信息放入 `metadata`，不要增加私有顶层字段。
+- Skill 目录名与 `name` 保持一致，并使用小写 kebab-case。
+- 运行时可读取资源仅位于 `references/`、`scripts/`、`assets/`。
+- 禁止绝对路径、`..` 路径逃逸、symlink、junction/reparse point、特殊文件和越界解析。
+- `SKILL.md` 最大 256 KiB；单个资源最大 1 MiB。
+- `allowed-tools` 只是能力提示，不能创建工具，也不能绕过 `ToolSpec.permissions`、`tool_authorize`、HITL、timeout 或运行预算。
+
+可直接从 [`templates/SKILL.md`](templates/SKILL.md) 复制标准模板。
+
+## 仓库结构
 
 ```text
-skills/<skill-name>/
-├── SKILL.md
-├── references/     optional context and contracts
-├── scripts/        optional deterministic helpers
-├── assets/         optional templates and examples
-├── agents/         optional agent integration metadata
-└── tests/          optional regression tests
+LingxiSkills/
+├── skills/
+│   └── <skill-name>/
+│       ├── SKILL.md
+│       ├── references/    # 可选：说明、契约、上下文
+│       ├── scripts/       # 可选：确定性辅助脚本；不会被自动执行
+│       └── assets/        # 可选：模板与可复用输出资源
+├── templates/
+│   └── SKILL.md
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   ├── pull_request_template.md
+│   └── workflows/
+├── CONTRIBUTING.md
+└── requirements-dev.txt
 ```
 
-`SKILL.md` defines the capability contract. Runtime authorization, HITL, timeout, budget, and tool permissions remain the responsibility of the host runtime.
+## 提交新 Skill
 
-## Validation
+1. 先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)，或从 [`templates/SKILL.md`](templates/SKILL.md) 创建新目录。
+2. 本地运行开放 Agent Skills 标准校验：
 
 ```bash
 python -m pip install -r requirements-dev.txt
-python -m skills_ref.cli validate skills/adaptive-pedagogy
-python skills/skill-eval-harness/scripts/run_suite.py .
+python -m skills_ref.cli validate skills/<skill-name>
 ```
 
-The repository CI also validates every top-level `skills/*/SKILL.md` on pushes and pull requests.
+3. 提交 PR，并完成 PR 模板中的自查项。
+4. 对新增 Skill，`LingxiGraph Skill Review` Action 会安装当前 `LingXi-Org/LingxiGraph@main`，直接调用 LingxiGraph 自己的 `validate_skill()` 与 `FilesystemSkillSource` 做兼容性审查，同时继续运行 `skills-ref` 交叉验证。
 
-## Contributing
+这意味着 CI 的 LingxiGraph 兼容性结论来自实际运行时实现，而不是另一套近似规则。
 
-Keep `SKILL.md` concise and put detailed supporting material in `references/`, deterministic helpers in `scripts/`, reusable output resources in `assets/`, and regression coverage in `tests/` when applicable.
+## 贡献与质量
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+新增能力、行为修改、资源更新都应保持 `SKILL.md` 简洁、可发现且具备明确触发条件。复杂细节放入 `references/`，确定性辅助逻辑放入 `scripts/`，可复用输出资源放入 `assets/`。涉及生产教学行为时，建议同步补充或更新评测覆盖。
+
+完整要求见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## License
 
-See [LICENSE](LICENSE).
+见 [LICENSE](LICENSE)。

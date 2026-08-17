@@ -1,0 +1,143 @@
+name: LingxiGraph Skill Review
+
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+      - "templates/SKILL.md"
+      - ".github/workflows/lingxigraph-skill-review.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-new-skills:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout LingxiSkills
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Detect Skill directories to review
+        id: detect
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          : > /tmp/skills-to-review.txt
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --diff-filter=A --name-only "$BASE_SHA" "$HEAD_SHA" -- \
+              'skills/*/SKILL.md' 'skills/*/skill.md' \
+              | awk -F/ 'NF >= 3 {print $1 "/" $2}' \
+              | sort -u > /tmp/skills-to-review.txt
+          else
+            find skills -mindepth 2 -maxdepth 2 -type f -iname 'skill.md' -printf '%h\n' \
+              | sort -u > /tmp/skills-to-review.txt
+          fi
+
+          if [[ -s /tmp/skills-to-review.txt ]]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "Skills to review:"
+            cat /tmp/skills-to-review.txt
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            echo "No newly added Skill directory requires LingxiGraph review."
+          fi
+
+      - name: Install validators
+        if: steps.detect.outputs.found == 'true'
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements-dev.txt
+          python -m pip install --disable-pip-version-check "git+https://github.com/LingXi-Org/LingxiGraph.git@main"
+
+      - name: Validate Agent Skills standard
+        if: steps.detect.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r skill_dir; do
+            echo "::group::skills-ref: $skill_dir"
+            python -m skills_ref.cli validate "$skill_dir"
+            echo "::endgroup::"
+          done < /tmp/skills-to-review.txt
+
+      - name: Validate with LingxiGraph runtime
+        if: steps.detect.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          from lingxigraph import FilesystemSkillSource, validate_skill
+
+          skill_dirs = [
+              Path(line.strip())
+              for line in Path("/tmp/skills-to-review.txt").read_text(encoding="utf-8").splitlines()
+              if line.strip()
+          ]
+
+          failed = False
+
+          for skill_dir in skill_dirs:
+              print(f"::group::LingxiGraph: {skill_dir}")
+              canonical = skill_dir / "SKILL.md"
+
+              if not canonical.is_file():
+                  print(f"::error file={canonical}::New contributions must use the canonical uppercase SKILL.md filename")
+                  failed = True
+
+              issues = validate_skill(skill_dir)
+              if issues:
+                  failed = True
+                  for issue in issues:
+                      issue_path = getattr(issue, "path", canonical)
+                      code = getattr(issue, "code", "skill_validation")
+                      message = getattr(issue, "message", str(issue))
+                      print(f"::error file={issue_path}::{code}: {message}")
+
+              if not issues:
+                  try:
+                      source = FilesystemSkillSource(skill_dir)
+                      discovered = source.discover()
+                      if len(discovered) != 1:
+                          raise RuntimeError(f"expected exactly one discovered Skill, got {len(discovered)}")
+
+                      metadata = discovered[0]
+                      if metadata.name != skill_dir.name:
+                          raise RuntimeError(
+                              f"frontmatter name {metadata.name!r} must match directory {skill_dir.name!r}"
+                          )
+
+                      spec = source.load(metadata.name)
+
+                      for resource_root in ("references", "scripts", "assets"):
+                          root = skill_dir / resource_root
+                          if not root.exists():
+                              continue
+                          for resource in sorted(root.rglob("*")):
+                              if resource.is_file() or resource.is_symlink():
+                                  relative = resource.relative_to(skill_dir).as_posix()
+                                  source.read_resource(spec.name, relative)
+                  except Exception as exc:
+                      print(f"::error file={canonical}::LingxiGraph runtime compatibility failed: {exc}")
+                      failed = True
+
+              print("::endgroup::")
+
+          if failed:
+              raise SystemExit(1)
+
+          print(f"LingxiGraph compatibility passed for {len(skill_dirs)} Skill(s).")
+          PY

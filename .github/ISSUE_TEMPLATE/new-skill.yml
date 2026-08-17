@@ -1,0 +1,63 @@
+name: 提交新 Skill
+description: 提议一个符合 LingxiGraph / Agent Skills 规范的新能力
+title: "[Skill]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你为 LingxiSkills 提议新能力。请先阅读 `CONTRIBUTING.md`，并尽量把一个 Skill 保持为单一、可发现、可评测的能力。
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill 名称
+      description: 使用小写 kebab-case，并与计划中的 `skills/<name>/` 目录一致。
+      placeholder: adaptive-pedagogy
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+      description: 说明目标用户、任务场景以及为什么现有 Skill 不能覆盖。
+    validations:
+      required: true
+  - type: textarea
+    id: trigger
+    attributes:
+      label: 触发条件
+      description: 说明 Agent 应在什么情况下发现并选择这个 Skill，以及不应使用它的边界。
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: 输出契约
+      description: 描述输出语言、结构、字段、产物或可验证条件。
+    validations:
+      required: true
+  - type: textarea
+    id: resources
+    attributes:
+      label: 计划使用的资源
+      description: 如有需要，说明 `references/`、`scripts/`、`assets/` 的用途；脚本不会因 Skill 被读取而自动执行。
+  - type: textarea
+    id: tools
+    attributes:
+      label: 工具与权限假设
+      description: 如需 `allowed-tools`，请说明它只是提示；真实授权必须由宿主运行时提供。
+  - type: textarea
+    id: evaluation
+    attributes:
+      label: 验证与评测方式
+      description: 说明如何验证契约、执行轨迹、教学质量或学习结果。
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已阅读 `CONTRIBUTING.md` 和 `templates/SKILL.md`。
+          required: true
+        - label: 我不会通过 Skill 绕过 ToolSpec、HITL、timeout、预算或其他运行时策略。
+          required: true
