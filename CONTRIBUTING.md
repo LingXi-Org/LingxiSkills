@@ -1,121 +1,138 @@
 # 贡献指南
 
-感谢你为 LingxiSkills 提交能力、资源、修复或评测。LingxiSkills 以 LingxiGraph 的 Agent Skills Runtime 为主要运行时基线，同时保持对开放 Agent Skills 目录规范的兼容。
+感谢你参与 LingxiSkills。这个仓库面向可复用 Agent Skills、相关资源和能力展示站点；提交内容必须同时满足开放 Agent Skills 目录规范和 LingxiGraph Runtime 的资源、安全与兼容性要求。
 
-## 1. 新 Skill 的目录
+## 贡献前必读
 
-每个新 Skill 放在独立目录中：
+- 新 Skill 优先从 [`templates/SKILL.md`](templates/SKILL.md) 复制模板。
+- 每个 Skill 都必须能够被独立发现、加载和理解，不依赖仓库外的隐式文件或人工步骤。
+- Skill 描述的是“如何完成一类任务”，不是运行时权限配置。工具授权、HITL、timeout、预算和其他安全策略由宿主 Runtime 决定。
+
+## Skill 目录规范
+
+每个 Skill 使用独立目录：
 
 ```text
 skills/<skill-name>/
 ├── SKILL.md
-├── references/     # 可选：详细说明、契约、上下文
-├── scripts/        # 可选：确定性辅助脚本；不会被自动执行
-└── assets/         # 可选：模板、示例与输出资源
+├── references/     # 可选：详细资料、契约和上下文
+├── scripts/        # 可选：确定性辅助脚本
+└── assets/         # 可选：模板、示例和可复用资源
 ```
 
-要求：
+必须满足：
 
 - `<skill-name>` 使用小写 kebab-case，例如 `adaptive-pedagogy`。
-- 贡献到本仓库时统一使用大写文件名 `SKILL.md`。
-- `SKILL.md` frontmatter 中的 `name` 必须与目录名一致。
-- 运行时需要读取的资源只放在 `references/`、`scripts/`、`assets/`。
+- 主文件统一命名为大写 `SKILL.md`。
+- `SKILL.md` frontmatter 中的 `name` 与目录名完全一致。
+- Runtime 需要读取的附加资源只放在 `references/`、`scripts/`、`assets/` 中。
+- 不使用绝对路径、`..`、symlink、junction/reparse point 或特殊文件绕过 Skill 目录边界。
 
-## 2. SKILL.md frontmatter
+## SKILL.md frontmatter
 
-LingxiGraph 不定义私有 Skill 格式。标准顶层字段如下：
+推荐结构：
 
 ```yaml
 ---
 name: your-skill-name
-description: Describe what the skill does and when it should be used.
+description: Describe what this skill does and when an agent should use it.
 license: MIT
 compatibility: Works with LingxiGraph and Agent Skills compatible runtimes.
 allowed-tools: read_skill_resource
 metadata:
   author: your-name
   version: 0.1.0
+  display-name: 展示名称
+  display-description: 面向用户的一句话能力说明
 ---
 ```
 
-其中：
+字段约定：
 
-- `name`：必填，非空字符串。
-- `description`：必填，既说明能力，也说明何时应该使用。
-- `license`：可选。
-- `compatibility`：可选。
-- `metadata`：可选；项目扩展信息应放在这里，而不是新增私有顶层字段。
-- `allowed-tools`：可选，仅作为能力提示。
+- `name`：必填，且必须与目录名一致。
+- `description`：必填；同时说明“这个 Skill 做什么”和“什么时候应使用”。
+- `license`、`compatibility`、`allowed-tools`：按实际需要填写。
+- 项目扩展信息放在 `metadata` 下，不要随意新增私有顶层字段。
+- `allowed-tools` 只是能力提示，不能创建工具或提升权限。
 
-`allowed-tools` 不能创建工具，也不能绕过 LingxiGraph 的 `ToolSpec.permissions`、`tool_authorize`、HITL、timeout、预算或其他运行时策略。
+## Skill 正文
 
-## 3. Skill 正文
+- 使用清晰、可执行的语言描述任务目标、适用条件和步骤。
+- `description` 应足以支持 discovery，不要要求 Agent 先读取全文才能判断是否适用。
+- 长资料、详细协议和背景信息拆到 `references/`，避免让 `SKILL.md` 失去可读性。
+- 明确必要输入、缺失信息时的处理方式、输出契约以及失败/降级条件。
+- 证据不足、能力范围不匹配或安全条件不满足时，应明确停止、降级或请求必要信息。
+- 不要声称 `scripts/` 中的脚本已经执行。LingxiGraph 读取脚本资源并不等于执行它们；脚本执行必须由宿主显式提供并授权工具。
 
-- 用清晰、可执行的祈使句描述行为。
-- 让 `description` 足以支持 discovery，不要依赖模型先读取全文才知道用途。
-- 保持 `SKILL.md` 简洁；复杂规则和长资料拆到 `references/`。
-- 明确输出契约、失败/降级行为和必要的安全边界。
-- 不要声称脚本已被执行，除非宿主运行时另行暴露并授权了执行工具。
-- 面向学习者的内容应明确语言、教学目标、证据使用方式和状态写入边界。
+## 资源与安全边界
 
-可复制 [`templates/SKILL.md`](templates/SKILL.md) 作为起点。
+LingxiGraph 对 Skill 资源读取有明确限制，贡献内容必须兼容这些限制：
 
-## 4. LingxiGraph 安全边界
-
-提交内容必须兼容 LingxiGraph 的资源读取约束：
-
-- 禁止绝对路径和 `..` 路径逃逸。
-- 禁止 symlink、junction/reparse point 与特殊文件。
-- 不允许从 Skill 目录越界解析资源。
 - `SKILL.md` 最大 256 KiB。
-- 单个 `references/`、`scripts/`、`assets/` 资源最大 1 MiB。
-- 读取 `scripts/` 不会自动执行脚本。
+- `references/`、`scripts/`、`assets/` 中单个资源最大 1 MiB。
+- 禁止通过路径逃逸、链接或特殊文件访问 Skill 目录之外的内容。
+- 不要在 Skill 中存放 API Key、Token、Cookie、密码、真实用户数据或其他敏感信息。
+- 不要通过 Skill 文本要求宿主绕过 `ToolSpec.permissions`、`tool_authorize`、HITL、timeout、预算、确认流程或其他运行时策略。
 
-不要通过 Skill 文本尝试提升工具权限、绕过审批、取消预算或规避宿主安全策略。
+面向学习场景的 Skill 应额外明确教学目标、需要的学习证据、输出语言/形式以及允许读取或写入的学习状态边界。
 
-## 5. 本地校验
+## 本地校验
 
-至少运行开放 Agent Skills reference validator：
+安装校验工具：
 
 ```bash
 python -m pip install -r requirements-dev.txt
+```
+
+每个新增或修改的 Skill 至少运行：
+
+```bash
 python -m skills_ref.cli validate skills/<skill-name>
 ```
 
-如果修改了多个 Skill，请逐个校验。涉及行为变化时，建议运行仓库中的评测套件：
+如果修改影响 Skill 的实际行为、资源结构或兼容性，建议运行仓库中的评测套件：
 
 ```bash
 python skills/skill-eval-harness/scripts/run_suite.py .
 ```
 
-## 6. 新 Skill PR 的自动审查
+新增 Skill 还必须能够通过 LingxiGraph 的 discovery、load、validate 和 resource access；不要依赖 validator 未覆盖的目录外行为。
 
-当 PR 新增 `skills/*/SKILL.md` 或 `skills/*/skill.md` 时，`.github/workflows/lingxigraph-skill-review.yml` 会：
+## 站点贡献
 
-1. 找出本次 PR 新增的 Skill 目录；
-2. 运行 `skills-ref` 标准校验；
-3. 从 `LingXi-Org/LingxiGraph@main` 安装当前 LingxiGraph；
-4. 直接调用 `lingxigraph.validate_skill()`；
-5. 使用 `FilesystemSkillSource` 完成 discovery、load，并逐个读取 `references/`、`scripts/`、`assets/` 中的资源，以验证真实运行时兼容性。
+`web/` 是由 `skills/*/SKILL.md` 生成能力信息的静态站点。修改站点或 Skill 元数据后，应确保生成结果和源码一致：
 
-因此新增 Skill 的 LingxiGraph 审查以实际运行时为准。
+```bash
+cd web
+npm ci
+npm run check
+npm run typecheck
+npm run build
+```
 
-## 7. 提交前自查
+不要手工修改可由生成脚本稳定产生的内容来掩盖 Skill 源数据问题。展示名称、描述等 Skill 相关信息应优先来自规范化元数据。
 
-- 新 Skill 已使用 `skills/<name>/SKILL.md`。
-- `name` 与目录名一致，且为小写 kebab-case。
-- `description` 同时说明“做什么”和“什么时候使用”。
-- 未增加 LingxiGraph 不支持的私有顶层 frontmatter 字段。
-- 扩展信息已放入 `metadata`。
-- 资源只通过 `references/`、`scripts/`、`assets/` 暴露给运行时。
-- 没有 symlink、路径逃逸、特殊文件或超限资源。
-- `allowed-tools` 没有被当作权限声明使用。
-- 脚本不会因 Skill 被发现或读取而自动执行。
-- 已运行本地校验；行为变化已有必要的测试或评测覆盖。
-- PR 已完成 `.github/pull_request_template.md` 中的自查。
+## 提交前自查
 
-## 8. Issue 与 PR
+提交 PR 前确认：
 
-新能力建议先使用“提交新 Skill”Issue 模板说明用途、触发条件、输出契约与评测方式；兼容性或行为缺陷使用“Skill 缺陷”模板。
+- Skill 使用 `skills/<name>/SKILL.md`，名称为小写 kebab-case。
+- frontmatter `name` 与目录名一致。
+- `description` 同时覆盖能力和适用时机。
+- 扩展字段放在 `metadata` 下，没有不必要的私有顶层字段。
+- 资源只位于允许目录中，没有路径逃逸、链接、特殊文件或超限文件。
+- `allowed-tools` 没有被当作权限声明。
+- 脚本不会被描述为自动执行。
+- 已运行与改动对应的 validator、评测或站点检查。
+- 没有提交密钥、真实用户数据、构建产物或无关生成文件。
 
-PR 请尽量保持单一职责。新 Skill 与大规模无关重构不要混在同一个 PR 中，以便审查与回滚。
+## 分支、提交与 Pull Request
+
+- 不直接向 `main` 提交功能代码；从最新 `main` 创建独立分支并通过 Pull Request 合并。
+- 一个 PR 尽量只包含一个 Skill、一个站点改动主题或一组紧密相关的修复。
+- 新 Skill 与大规模无关重构、格式化或站点改版不要混在同一个 PR 中。
+- 提交信息建议使用清晰的 Conventional Commit 风格，例如 `feat:`、`fix:`、`docs:`、`test:`、`refactor:`、`chore:`。
+- PR 描述应说明 Skill 的用途或站点变化、适用条件、验证方式，以及是否涉及兼容性或安全边界变化。
+- 合并前必须确保 `validate` 和 `review-new-skills` 等 required checks 通过，并处理仍然有效的 review conversation。
+
+对于新的能力类别、会改变 Skill 规范的提案或影响多个现有 Skill 的兼容性修改，建议先通过 Issue 说明目标、格式和迁移影响，再开始实现。
